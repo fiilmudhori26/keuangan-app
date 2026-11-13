@@ -11,7 +11,7 @@ export const auth = isDatabaseConfigured && db
       appName: "Keuangan",
       baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
       secret: process.env.BETTER_AUTH_SECRET,
-      database: drizzleAdapter(db, { provider: "pg", schema }),
+      database: drizzleAdapter(db, { provider: "pg", schema, usePlural: true }),
       emailAndPassword: { enabled: true, minPasswordLength: 8 },
       socialProviders:
         googleId && googleSecret
