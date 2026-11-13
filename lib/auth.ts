@@ -11,6 +11,12 @@ export const auth = isDatabaseConfigured && db
       appName: "Keuangan",
       baseURL: process.env.BETTER_AUTH_URL ?? "http://localhost:3000",
       secret: process.env.BETTER_AUTH_SECRET,
+      trustedOrigins: [
+        "http://localhost:3000",
+        "https://keuangan-app-self.vercel.app",
+        "https://keuangan-app-fiilmudhori26s-projects.vercel.app",
+        "https://keuangan-app-git-main-fiilmudhori26s-projects.vercel.app",
+      ],
       database: drizzleAdapter(db, { provider: "pg", schema, usePlural: true }),
       emailAndPassword: { enabled: true, minPasswordLength: 8 },
       socialProviders:
