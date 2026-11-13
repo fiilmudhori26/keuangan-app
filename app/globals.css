@@ -1,0 +1,277 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f6f8f7;
+  --foreground: #0e1a15;
+  --card: #ffffff;
+  --card-foreground: #0e1a15;
+  --popover: #ffffff;
+  --popover-foreground: #0e1a15;
+  --primary: #0b7a4b;
+  --primary-foreground: #ffffff;
+  --secondary: #e3f3ea;
+  --secondary-foreground: #0b7a4b;
+  --muted: #eef2f0;
+  --muted-foreground: #5b6b63;
+  --accent: #e3f3ea;
+  --accent-foreground: #0b7a4b;
+  --destructive: #c8372d;
+  --border: #dce4e0;
+  --input: #dce4e0;
+  --ring: #0b7a4b;
+  --warn: #b7791f;
+  --warn-text: #8f5a0a;
+  --warn-soft: #fbf0d9;
+  --expense-soft: #fbe7e5;
+  --surface-raised: #ffffff;
+  --radius: 10px;
+
+  /* Motion tokens (design.md §9) */
+  --motion-fast: 120ms;
+  --motion-base: 180ms;
+  --motion-slow: 240ms;
+  --motion-sheet: 260ms;
+  --motion-count: 700ms;
+  --motion-bar: 420ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --stagger-step: 30ms;
+}
+
+.dark {
+  --background: #0c1210;
+  --foreground: #e8f0ec;
+  --card: #141c18;
+  --card-foreground: #e8f0ec;
+  --popover: #1b2520;
+  --popover-foreground: #e8f0ec;
+  --primary: #34c38a;
+  --primary-foreground: #06130d;
+  --secondary: #12352a;
+  --secondary-foreground: #34c38a;
+  --muted: #1b2520;
+  --muted-foreground: #93a59b;
+  --accent: #12352a;
+  --accent-foreground: #34c38a;
+  --destructive: #f0716a;
+  --border: #26332c;
+  --input: #26332c;
+  --ring: #34c38a;
+  --warn: #e0a93b;
+  --warn-text: #f0c66b;
+  --warn-soft: #33280f;
+  --expense-soft: #3a1b19;
+  --surface-raised: #1b2520;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-warn: var(--warn);
+  --color-warn-text: var(--warn-text);
+  --color-warn-soft: var(--warn-soft);
+  --color-expense-soft: var(--expense-soft);
+  --color-surface-raised: var(--surface-raised);
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --radius-btn: 10px;
+  --radius-panel: 14px;
+  --radius-hero: 20px;
+  --radius-sheet: 24px;
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Gerak (design.md §9) --- */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes amount-in {
+  from {
+    opacity: 0.4;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes bar-fill {
+  from {
+    width: 0;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up var(--motion-slow) var(--ease-out) both;
+}
+
+.animate-sheet-in {
+  animation: sheet-in var(--motion-sheet) var(--ease-out) both;
+}
+
+.animate-overlay-in {
+  animation: overlay-in var(--motion-base) var(--ease-out) both;
+}
+
+.animate-pop-in {
+  animation: pop-in var(--motion-base) var(--ease-spring) both;
+}
+
+.animate-toast-in {
+  animation: toast-in var(--motion-slow) var(--ease-out) both;
+}
+
+.animate-amount {
+  animation: amount-in var(--motion-fast) var(--ease-out) both;
+}
+
+.animate-bar {
+  animation: bar-fill var(--motion-bar) var(--ease-out) both;
+}
+
+/* Kerangka memuat: shimmer halus, aman untuk reduced-motion. */
+@layer components {
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--muted);
+    border-radius: var(--radius);
+  }
+
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--foreground) 8%, transparent),
+      transparent
+    );
+    animation: shimmer 1.4s var(--ease-in-out) infinite;
+  }
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+}
+
+* {
+  border-color: var(--border);
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* hide scrollbars on horizontal chip rows */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .skeleton::after {
+    display: none;
+  }
+}
