@@ -85,7 +85,7 @@ export default async function DashboardPage({
         <p className="text-[13px] font-medium text-muted-foreground">Saldo total</p>
         <CountUp
           value={totalBalance(walletBalances)}
-          className="num mt-1 text-[40px] font-bold leading-[44px] text-foreground"
+          className="num mt-1 text-[40px] font-bold leading-[44px] tracking-display text-foreground"
         />
         <TrendChart data={trend} />
         <p className="mt-1 text-[13px] text-muted-foreground">
@@ -163,7 +163,7 @@ export default async function DashboardPage({
 
       <Link
         href="/reports"
-        className="flex h-12 items-center justify-between rounded-[14px] border border-border bg-card px-4 text-[15px] font-medium text-foreground transition-colors duration-150 ease-out hover:bg-muted"
+        className="flex h-12 items-center justify-between rounded-[14px] border border-border bg-card px-4 text-[16px] font-medium text-foreground transition-colors duration-150 ease-out hover:bg-muted"
       >
         Laporan bulanan
         <ChevronRight className="size-5 text-muted-foreground" aria-hidden />

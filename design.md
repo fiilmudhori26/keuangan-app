@@ -42,6 +42,7 @@ Semua warna dipakai lewat variabel CSS (bagian 10). Jangan menulis hex langsung 
 | `warn-text` | `#8F5A0A` | Teks peringatan kuning |
 | `warn-soft` | `#FBF0D9` | Latar peringatan kuning |
 | `on-brand` | `#FFFFFF` | Teks di atas `brand` |
+| `overlay` | `ink` 40% | Peredup latar di belakang sheet/dialog |
 
 ### 2.2 Tema gelap
 
@@ -61,10 +62,12 @@ Semua warna dipakai lewat variabel CSS (bagian 10). Jangan menulis hex langsung 
 | `warn-text` | `#F0C66B` | Teks peringatan kuning |
 | `warn-soft` | `#33280F` | Latar peringatan kuning |
 | `on-brand` | `#06130D` | Teks di atas `brand` |
+| `overlay` | hitam 60% | Peredup latar di belakang sheet/dialog |
 
 **Aturan penggunaan:**
 - Hijau `brand` dipakai hemat: tombol utama, angka pemasukan, indikator aktif. Jangan mewarnai seluruh panel dengan hijau.
 - Di tema gelap, kedalaman dibentuk oleh perbedaan nada permukaan, bukan bayangan.
+- `overlay` adalah peredup di belakang sheet/dialog: terang `color-mix(in oklab, #0E1A15 40%, transparent)`, gelap `color-mix(in oklab, #000000 60%, transparent)`. Jangan memakai warna hitam/putih transparan langsung.
 - Pasangan teks/latar harus memenuhi kontras WCAG AA (4,5:1 untuk teks biasa). `warn` tidak boleh dipakai sebagai warna teks.
 
 ### 2.3 Palet grafik kategori (8 warna)
@@ -88,24 +91,29 @@ Kategori di atas 8 digabung ke "Lainnya".
 
 ## 3. Tipografi
 
-**Keluarga huruf:** **Plus Jakarta Sans** (Google Fonts), satu keluarga untuk seluruh antarmuka. Bobot yang dimuat: 400, 500, 600, 700. Cadangan: `ui-sans-serif, system-ui, sans-serif`.
+**Keluarga huruf:** **Inter Tight** (next/font/google, bobot 400/500/600/700, `display: swap`, variable `--font-inter`), satu keluarga untuk seluruh antarmuka. Cadangan: `ui-sans-serif, system-ui, sans-serif`. Font dimuat lewat `next/font/google` pada `app/layout.tsx` dan diekspos ke CSS lewat variable `--font-inter`; `--font-sans` memetakan ke `var(--font-inter)` (§10).
 
-**Angka:** semua nominal memakai `font-variant-numeric: tabular-nums` agar kolom rata. Bila bobot yang dimuat tidak mendukung fitur ini, ganti keluarga khusus angka dengan Manrope (cek dukungan fitur sebelum memutuskan).
+**Angka:** semua nominal memakai `font-variant-numeric: tabular-nums` agar kolom rata (kelas `.num`). Bila bobot yang dimuat tidak mendukung fitur ini, ganti keluarga khusus angka dengan Manrope (cek dukungan fitur sebelum memutuskan).
+
+**Tracking:** Judul (title-1) dan angka display memakai tracking −0.02em; judul bagian (title-2) tanpa tracking. Nominal tetap `tabular-nums`.
 
 **Skala (mobile, basis 16 px):**
 
 | Peran | Ukuran / tinggi baris | Bobot | Pemakaian |
 |---|---|---|---|
-| `display` | 40 / 44 | 700 | Saldo total di dashboard |
+| `display` | 40 / 44 | 700 | Saldo total di dashboard, nominal numpad (lihat §10) |
 | `title-1` | 24 / 30 | 700 | Judul layar |
 | `title-2` | 18 / 24 | 600 | Judul bagian, nominal ringkasan |
 | `body` | 16 / 24 | 400 | Teks isi, nama transaksi |
 | `body-strong` | 16 / 24 | 600 | Nominal pada daftar |
+| `body-sm` | 15 / 22 | 400 | Teks pendukung, pesan toast |
+| `label` | 14 / 20 | 600 | Tombol kecil, chip, kendali bantu |
 | `caption` | 13 / 18 | 500 | Tanggal, kategori, label |
 | `micro` | 12 / 16 | 500 | Label navigasi bawah |
 
 **Aturan:**
 - Teks sentence case. Jangan memakai huruf kapital semua untuk label.
+- Judul (title-1) dan angka display memakai tracking −0.02em; judul bagian (title-2) tanpa tracking. Nominal tetap `tabular-nums`.
 - Panjang baris di bawah 80 karakter.
 - Label kecil tidak diletakkan di atas setiap judul; tambahkan hanya bila informasinya memang diperlukan.
 - Ukuran teks minimal 12 px; hormati pengaturan ukuran teks sistem.
@@ -241,10 +249,10 @@ Tinggi 8, radius penuh, latar `line`. Isi: `brand` di bawah 80%, `warn` mulai 80
 Radius 10, ikon + nama + saldo kecil. Terpilih: latar `brand-soft`, border `brand`.
 
 ### Navigasi bawah
-Lima slot: Beranda, Transaksi, Tambah (tombol bulat `brand`, ukuran 56, menonjol di tengah), Anggaran, Lainnya. Ikon 24 px dengan label `micro`. Slot aktif memakai `brand` dan bobot ikon lebih tebal, ditandai pil latar `brand-soft` di belakang ikon. Pil, warna teks, dan bobot ikon bertransisi 200 ms tanpa menggeser tata letak.
+Lima slot: Beranda, Transaksi, Tambah (tombol bulat `brand`, ukuran 56, menonjol di tengah), Anggaran, Lainnya. Ikon 24 px dengan label `micro`. Slot aktif memakai `brand` dengan pil latar `brand-soft` di belakang ikon. Pil dan warna teks bertransisi 180 ms (`--motion-base`) tanpa menggeser tata letak; bobot ikon berganti langsung (`strokeWidth` tidak dapat dianimasikan CSS).
 
 ### Bottom sheet
-Radius atas 24, handle 4 × 36, latar `surface-raised` (gelap) / `surface` (terang), peredup latar 40%. Dapat ditutup dengan geser ke bawah dan tombol tutup. Saat dibuka, peredup memudar 180 ms dan panel naik 24 px selama 260 ms `ease-out`; saat ditutup, keduanya berbalik dalam 240 ms sebelum panel dilepas. Fokus dipindah ke panel, ESC menutup, dan gulir halaman dikunci selama sheet terbuka.
+Radius atas 24, handle dekoratif 4 × 36, latar `surface-raised` (gelap) / `surface` (terang), peredup latar sesuai token `overlay`, dan tombol tutup. Saat dibuka, peredup memudar 180 ms dan panel naik 24 px selama 260 ms `ease-out`; saat ditutup, keduanya berbalik dalam 240 ms sebelum panel dilepas. Fokus dipindah ke panel, ESC menutup, dan gulir halaman dikunci selama sheet terbuka.
 
 ### Grafik
 - Donat: pengeluaran per kategori, total di tengah, legenda dengan nominal dan persen.
@@ -296,10 +304,10 @@ Pesan galat menjelaskan apa yang terjadi dan cara memperbaikinya; tidak meminta 
 ## 9. Gerak dan Aksesibilitas
 
 **Gerak:**
-Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `--motion-base` 180 ms, `--motion-slow` 240 ms, `--motion-sheet` 260 ms, `--motion-bar` 420 ms, `--motion-count` 700 ms; easing `--ease-out`, `--ease-in-out`, `--ease-spring`; jeda bertahap `--stagger-step` 30 ms.
+Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `--motion-base` 180 ms, `--motion-slow` 240 ms, `--motion-sheet` 260 ms, `--motion-bar` 420 ms, `--motion-count` 700 ms; easing `--ease-out`, `--ease-in-out`; jeda bertahap `--stagger-step` 30 ms.
 
 - **Respons tindakan pengguna:** tombol (150 ms), sheet buka/tutup, toast masuk, dialog konfirmasi, segmented control, chip kategori, dan perubahan nominal (120 ms).
-- **Otomatis, hanya saat konten pertama tampil:** saldo total menghitung naik sekali (`--motion-count`), baris transaksi `fade-up` berurutan (maksimal 8 baris), isi bar anggaran terisi dari 0, dan garis tren saldo tergambar sekali. Tidak ada animasi masuk pada bagian halaman lain.
+- **Otomatis, hanya saat konten pertama tampil:** Saldo total menghitung naik sekali saat pertama tampil; perubahan nilai berikutnya (pindah bulan, refresh setelah simpan) berpindah dengan transisi 700 ms dari nilai sebelumnya, bukan dari 0. Baris transaksi `fade-up` berurutan (maksimal 8 baris), isi bar anggaran terisi dari 0, dan garis tren saldo tergambar sekali. Tidak ada animasi masuk pada bagian halaman lain.
 - **Saat menunggu data:** kilau `.skeleton`. Ini satu-satunya animasi yang berulang.
 - Tidak ada animasi saat berpindah halaman atau menggulir.
 - Hormati `prefers-reduced-motion`: durasi dipangkas, kilau kerangka dimatikan, hitungan saldo langsung menampilkan nilai akhir, dan transformasi tekan dinonaktifkan.
@@ -345,6 +353,8 @@ Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `-
   --warn-text: #8F5A0A;
   --warn-soft: #FBF0D9;
   --expense-soft: #FBE7E5;
+  --surface-raised: #FFFFFF;
+  --overlay: color-mix(in oklab, #0E1A15 40%, transparent);
   --radius: 10px;
   /* gerak */
   --motion-fast: 120ms;
@@ -355,7 +365,6 @@ Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `-
   --motion-count: 700ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
   --stagger-step: 30ms;
 }
 
@@ -382,6 +391,8 @@ Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `-
   --warn-text: #F0C66B;
   --warn-soft: #33280F;
   --expense-soft: #3A1B19;
+  --surface-raised: #1B2520;
+  --overlay: color-mix(in oklab, #000000 60%, transparent);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -391,7 +402,9 @@ Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `-
 
 **Tailwind:** petakan `warn`, `warn-text`, `warn-soft`, `expense-soft` ke variabel di atas pada `theme.extend.colors`; jangan memakai warna bawaan Tailwind di komponen.
 
-**Font:** muat lewat `next/font/google` (Plus Jakarta Sans, bobot 400/500/600/700, `display: swap`), set pada `body`, dan aktifkan `tabular-nums` pada kelas utilitas `.num` yang dipakai di semua nominal.
+**Skala `display`:** skala `display` (40 / 44, bobot 700) dipakai untuk saldo total di dashboard dan untuk nominal numpad (lihat "Input nominal"). Di kode nilainya ditulis langsung (mis. `text-[40px] leading-[44px] font-bold tracking-display`), sehingga dipetakan ke skala `display` secara tidak langsung — tidak ada kelas `.display` khusus.
+
+**Font:** muat lewat `next/font/google` (Inter Tight, bobot 400/500/600/700, `display: swap`, variable `--font-inter`) pada `app/layout.tsx`; variable diset pada `body`, `--font-sans` memetakan ke `var(--font-inter)`, dan aktifkan `tabular-nums` pada kelas utilitas `.num` yang dipakai di semua nominal.
 
 **PWA:**
 - `theme_color`: `#0B7A4B` (terang) dan `#0C1210` (gelap) lewat `<meta name="theme-color" media="(prefers-color-scheme: ...)">`.

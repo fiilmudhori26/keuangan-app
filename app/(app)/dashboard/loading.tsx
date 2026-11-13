@@ -1,10 +1,10 @@
 export default function DashboardLoading() {
   return (
     <div className="space-y-5" aria-busy="true" aria-label="Memuat dashboard">
-      <header className="flex items-center justify-between gap-2">
+      <header className="flex min-h-[62px] items-center justify-between gap-2">
         <div className="space-y-2">
           <div className="skeleton h-3.5 w-24" />
-          <div className="skeleton h-5 w-32" />
+          <div className="skeleton h-11 w-32" />
         </div>
         <div className="flex items-center gap-2">
           <div className="skeleton h-11 w-20" />
@@ -12,7 +12,7 @@ export default function DashboardLoading() {
         </div>
       </header>
 
-      <div className="rounded-[20px] border border-border bg-card p-5">
+      <div className="rounded-hero border border-border bg-card p-5">
         <div className="skeleton h-3.5 w-20" />
         <div className="skeleton mt-2 h-11 w-56" />
         <div className="skeleton mt-3 h-20 w-full" />
@@ -21,7 +21,7 @@ export default function DashboardLoading() {
 
       <div className="grid grid-cols-2 gap-3">
         {[0, 1].map((item) => (
-          <div key={item} className="space-y-2 rounded-[14px] border border-border bg-card p-4">
+          <div key={item} className="space-y-2 rounded-panel border border-border bg-card p-4">
             <div className="skeleton h-3.5 w-14" />
             <div className="skeleton h-5 w-24" />
           </div>
@@ -33,7 +33,7 @@ export default function DashboardLoading() {
           <div className="skeleton h-5 w-24" />
           <div className="skeleton h-4 w-10" />
         </div>
-        <div className="space-y-4 rounded-[14px] border border-border bg-card p-4">
+        <div className="space-y-4 rounded-panel border border-border bg-card p-4">
           {[0, 1, 2].map((item) => (
             <div key={item} className="space-y-2">
               <div className="skeleton h-4 w-full" />
@@ -62,6 +62,8 @@ export default function DashboardLoading() {
           ))}
         </ul>
       </section>
+
+      <div className="skeleton h-12 w-full rounded-panel" />
     </div>
   );
 }

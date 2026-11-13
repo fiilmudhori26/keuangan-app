@@ -30,7 +30,7 @@ export default async function BudgetsPage({
     <div className="space-y-4">
       <header className="flex items-start justify-between gap-2">
         <div>
-          <h1 className="text-[24px] font-bold leading-[30px] text-foreground">Anggaran</h1>
+          <h1 className="text-[24px] font-bold leading-[30px] tracking-display text-foreground">Anggaran</h1>
           <p className="text-[13px] text-muted-foreground">Pantau batas pengeluaran per kategori.</p>
         </div>
         <MonthSwitcher month={month} basePath="/budgets" />

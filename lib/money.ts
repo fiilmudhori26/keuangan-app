@@ -8,7 +8,9 @@ const idr = new Intl.NumberFormat("id-ID", {
 });
 
 export function formatRupiah(amount: number): string {
-  return `Rp ${idr.format(Math.round(amount))}`;
+  const rounded = Math.round(amount);
+  const sign = rounded < 0 ? "−" : "";
+  return `${sign}Rp ${idr.format(Math.abs(rounded))}`;
 }
 
 export function formatSigned(amount: number, type: "income" | "expense"): string {

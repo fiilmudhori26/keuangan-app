@@ -176,7 +176,7 @@ export function TransactionSheet({
         </Button>
       }
     >
-      <div role="group" aria-label="Jenis transaksi" className="grid grid-cols-3 gap-1 rounded-[10px] bg-muted p-1">
+      <div role="group" aria-label="Jenis transaksi" className="grid grid-cols-3 gap-1 rounded-btn bg-muted p-1">
         {modes.map((item) => (
           <button
             key={item.value}
@@ -184,7 +184,7 @@ export function TransactionSheet({
             onClick={() => setMode(item.value)}
             aria-pressed={mode === item.value}
             className={cn(
-              "h-11 rounded-[8px] text-[14px] font-semibold transition-[background-color,color,box-shadow] duration-150 ease-out",
+              "h-11 rounded-[8px] text-[14px] leading-5 font-semibold transition-[background-color,color,box-shadow] duration-150 ease-out",
               mode === item.value
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground",
@@ -204,7 +204,7 @@ export function TransactionSheet({
           key={digits}
           aria-hidden
           className={cn(
-            "animate-amount num mt-1 text-[40px] font-bold leading-[44px]",
+            "animate-amount num mt-1 text-[40px] font-bold leading-[44px] tracking-display",
             digits ? "text-foreground" : "text-muted-foreground",
           )}
         >
@@ -219,7 +219,7 @@ export function TransactionSheet({
             type="button"
             onClick={() => press(key)}
             aria-label={key === "back" ? "Hapus angka" : key}
-            className="flex h-12 items-center justify-center rounded-[10px] border border-border bg-card text-[18px] font-semibold text-foreground transition-[background-color,transform] duration-150 ease-out active:scale-[0.98] motion-reduce:active:scale-100"
+            className="flex h-12 items-center justify-center rounded-btn border border-border bg-card text-[18px] leading-6 font-semibold text-foreground transition-[background-color,transform] duration-150 ease-out active:scale-[0.98] motion-reduce:active:scale-100"
           >
             {key === "back" ? <Delete className="size-5" aria-hidden /> : key}
           </button>
@@ -262,7 +262,7 @@ export function TransactionSheet({
                     onClick={() => setCategoryId(category.id)}
                     aria-pressed={categoryId === category.id}
                     className={cn(
-                      "flex h-11 shrink-0 items-center gap-2 rounded-[10px] border px-3 text-[14px] font-medium transition-colors duration-150 ease-out",
+                      "flex h-11 shrink-0 items-center gap-2 rounded-btn border px-3 text-[14px] leading-5 font-medium transition-colors duration-150 ease-out",
                       categoryId === category.id
                         ? "border-primary bg-secondary text-secondary-foreground"
                         : "border-border text-foreground",
@@ -314,7 +314,7 @@ export function TransactionSheet({
         {initial ? null : (
           <a
             href="/scan"
-            className="flex h-12 items-center justify-center gap-2 rounded-[10px] border border-border text-[14px] font-semibold text-foreground"
+            className="flex h-12 items-center justify-center gap-2 rounded-btn border border-border text-[14px] leading-5 font-semibold text-foreground"
           >
             <Camera className="size-5" aria-hidden /> Scan struk
           </a>

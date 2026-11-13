@@ -26,6 +26,7 @@
   --warn-soft: #fbf0d9;
   --expense-soft: #fbe7e5;
   --surface-raised: #ffffff;
+  --overlay: color-mix(in oklab, #0e1a15 40%, transparent);
   --radius: 10px;
 
   /* Motion tokens (design.md §9) */
@@ -33,11 +34,12 @@
   --motion-base: 180ms;
   --motion-slow: 240ms;
   --motion-sheet: 260ms;
+  /* Harus sama dengan DEFAULT_DURATION di components/ui/count-up.tsx */
   --motion-count: 700ms;
   --motion-bar: 420ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  /* Harus sama dengan STAGGER_STEP di components/transactions/transaction-list.tsx */
   --stagger-step: 30ms;
 }
 
@@ -65,6 +67,7 @@
   --warn-soft: #33280f;
   --expense-soft: #3a1b19;
   --surface-raised: #1b2520;
+  --overlay: color-mix(in oklab, #000000 60%, transparent);
 }
 
 @theme inline {
@@ -91,7 +94,8 @@
   --color-warn-soft: var(--warn-soft);
   --color-expense-soft: var(--expense-soft);
   --color-surface-raised: var(--surface-raised);
-  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --color-overlay: var(--overlay);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --radius-btn: 10px;
   --radius-panel: 14px;
   --radius-hero: 20px;
@@ -100,6 +104,11 @@
 
 @utility num {
   font-variant-numeric: tabular-nums;
+}
+
+/* Tracking negatif tipis untuk judul & angka display (design.md §3) */
+@utility tracking-display {
+  letter-spacing: -0.02em;
 }
 
 /* --- Gerak (design.md §9) --- */
@@ -195,7 +204,7 @@
 }
 
 .animate-pop-in {
-  animation: pop-in var(--motion-base) var(--ease-spring) both;
+  animation: pop-in var(--motion-base) var(--ease-out) both;
 }
 
 .animate-toast-in {
@@ -267,6 +276,7 @@ body {
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }

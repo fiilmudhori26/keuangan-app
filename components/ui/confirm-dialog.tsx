@@ -36,7 +36,7 @@ export function ConfirmDialog({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      <div className="animate-overlay-in absolute inset-0 bg-black/40" onClick={onClose} aria-hidden />
+      <div className="animate-overlay-in absolute inset-0 bg-overlay" onClick={onClose} aria-hidden />
       <div
         ref={ref}
         role="alertdialog"
@@ -44,7 +44,7 @@ export function ConfirmDialog({
         aria-labelledby="confirm-title"
         aria-describedby="confirm-desc"
         tabIndex={-1}
-        className="animate-pop-in relative w-full max-w-[360px] rounded-[20px] border border-border bg-surface-raised p-5"
+        className="animate-pop-in relative w-full max-w-[360px] rounded-hero border border-border bg-surface-raised p-5"
       >
         <h2 id="confirm-title" className="text-[18px] font-semibold text-foreground">
           {title}

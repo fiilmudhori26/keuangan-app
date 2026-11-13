@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 
 type Toast = { id: number; message: string; tone: "success" | "error" };
@@ -15,13 +15,24 @@ export function useToast() {
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
 
   const push = useCallback((message: string, tone: Toast["tone"] = "success") => {
     const id = Date.now() + Math.random();
     setToasts((current) => [...current, { id, message, tone }]);
-    setTimeout(() => {
+    const timer = setTimeout(() => {
+      timers.current.delete(id);
       setToasts((current) => current.filter((toast) => toast.id !== id));
     }, 4000);
+    timers.current.set(id, timer);
+  }, []);
+
+  useEffect(() => {
+    const pending = timers.current;
+    return () => {
+      pending.forEach((timer) => clearTimeout(timer));
+      pending.clear();
+    };
   }, []);
 
   const value = useMemo(() => ({ push }), [push]);
@@ -36,7 +47,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className="animate-toast-in flex w-full max-w-[420px] items-start gap-2 rounded-[10px] border border-border bg-surface-raised px-4 py-3 text-[14px] text-foreground shadow-sm"
+            className="animate-toast-in flex w-full max-w-[420px] items-start gap-2 rounded-btn border border-border bg-surface-raised px-4 py-3 text-[15px] leading-[22px] text-foreground shadow-sm"
           >
             {toast.tone === "success" ? (
               <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />

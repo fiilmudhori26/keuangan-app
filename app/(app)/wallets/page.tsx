@@ -15,7 +15,7 @@ export default async function WalletsPage() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-[24px] font-bold leading-[30px] text-foreground">Dompet</h1>
+        <h1 className="text-[24px] font-bold leading-[30px] tracking-display text-foreground">Dompet</h1>
         <p className="text-[13px] text-muted-foreground">
           Total saldo {formatRupiah(totalBalance(wallets))}
         </p>

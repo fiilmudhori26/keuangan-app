@@ -44,7 +44,7 @@ export default async function TransactionsPage({
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-[24px] font-bold leading-[30px] text-foreground">Transaksi</h1>
+        <h1 className="text-[24px] font-bold leading-[30px] tracking-display text-foreground">Transaksi</h1>
         <p className="text-[13px] text-muted-foreground">
           {allTime ? "Semua waktu" : `${transactions.length} transaksi bulan ini`}
         </p>

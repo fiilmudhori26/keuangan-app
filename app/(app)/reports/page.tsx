@@ -57,7 +57,7 @@ export default async function ReportsPage({
     <div className="space-y-5">
       <header className="flex items-start justify-between gap-2">
         <div>
-          <h1 className="text-[24px] font-bold leading-[30px] text-foreground">Laporan</h1>
+          <h1 className="text-[24px] font-bold leading-[30px] tracking-display text-foreground">Laporan</h1>
           <p className="text-[13px] text-muted-foreground">Ringkasan dan perbandingan bulan.</p>
         </div>
         <MonthSwitcher month={month} basePath="/reports" />
@@ -90,7 +90,7 @@ export default async function ReportsPage({
         </p>
         <Link
           href={`/api/export?month=${month}`}
-          className="flex h-12 items-center justify-center gap-2 rounded-[10px] border border-border text-[15px] font-semibold text-foreground"
+          className="flex h-12 items-center justify-center gap-2 rounded-[10px] border border-border text-[16px] font-semibold text-foreground"
         >
           <Download className="size-4" aria-hidden /> Ekspor CSV
         </Link>

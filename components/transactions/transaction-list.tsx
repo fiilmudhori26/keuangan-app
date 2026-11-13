@@ -13,7 +13,12 @@ import { deleteTransactionAction } from "@/app/actions/transactions";
 import { formatRupiah } from "@/lib/money";
 import { formatRelativeDate } from "@/lib/date";
 import { groupByDate } from "@/lib/services/finance";
+import { cn } from "@/lib/utils";
 import type { Category, Transaction, Wallet } from "@/lib/types";
+
+/** Harus sama dengan --stagger-step di app/globals.css. */
+const STAGGER_STEP = 30;
+const STAGGER_MAX = 8;
 
 export function TransactionList({
   transactions,
@@ -39,7 +44,7 @@ export function TransactionList({
 
   if (transactions.length === 0) {
     return (
-      <div className="flex flex-col items-center rounded-[14px] border border-dashed border-border px-6 py-10 text-center">
+      <div className="flex flex-col items-center rounded-panel border border-dashed border-border px-6 py-10 text-center">
         <span
           aria-hidden
           className="flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground"
@@ -72,7 +77,8 @@ export function TransactionList({
           </h3>
           <ul className="divide-y divide-border border-y border-border">
             {group.items.map((transaction) => {
-              const delay = `${Math.min(rowIndexById.get(transaction.id) ?? 0, 8) * 30}ms`;
+              const rowIndex = rowIndexById.get(transaction.id) ?? 0;
+              const animated = rowIndex < STAGGER_MAX;
               const category = transaction.categoryId
                 ? categoryById.get(transaction.categoryId)
                 : null;
@@ -83,15 +89,20 @@ export function TransactionList({
               return (
                 <li
                   key={transaction.id}
-                  style={{ animationDelay: delay }}
-                  className="animate-fade-up flex min-h-[56px] items-center gap-3 py-2 transition-colors duration-150 hover:bg-muted/40"
+                  style={animated ? { animationDelay: `${rowIndex * STAGGER_STEP}ms` } : undefined}
+                  className={cn(
+                    "flex min-h-[56px] items-center gap-3 py-2 transition-colors duration-150 hover:bg-muted/40",
+                    animated && "animate-fade-up",
+                  )}
                 >
                   <span
                     aria-hidden
                     className="flex size-9 shrink-0 items-center justify-center rounded-full text-[13px] font-bold"
                     style={{
-                      backgroundColor: `${category?.color ?? "#5B6B63"}22`,
-                      color: category?.color ?? "#5B6B63",
+                      backgroundColor: category?.color
+                        ? `${category.color}22`
+                        : "color-mix(in oklab, var(--muted-foreground) 15%, transparent)",
+                      color: category?.color ?? "var(--muted-foreground)",
                     }}
                   >
                     {(category?.name ?? (isTransfer ? "T" : "?")).slice(0, 1)}
@@ -124,7 +135,7 @@ export function TransactionList({
                     type="button"
                     aria-label={`Aksi untuk transaksi ${category?.name ?? "transfer"}`}
                     onClick={() => setActionsFor(transaction)}
-                    className="flex size-11 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-muted"
+                    className="flex size-11 items-center justify-center rounded-btn text-muted-foreground transition-colors duration-150 hover:bg-muted"
                   >
                     <MoreHorizontal className="size-5" aria-hidden />
                   </button>

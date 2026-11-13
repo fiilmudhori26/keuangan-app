@@ -10,7 +10,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
     <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col justify-center px-4 py-10">
       <div className="mb-8">
         <p className="text-[13px] font-medium text-primary">Keuangan</p>
-        <h1 className="mt-1 text-[24px] font-bold leading-[30px] text-foreground">
+        <h1 className="mt-1 text-[24px] font-bold leading-[30px] tracking-display text-foreground">
           Catat uang dalam hitungan detik
         </h1>
         <p className="mt-1 text-[14px] text-muted-foreground">

@@ -19,7 +19,7 @@ export default async function SettingsPage() {
   return (
     <div className="space-y-5">
       <header>
-        <h1 className="text-[24px] font-bold leading-[30px] text-foreground">Lainnya</h1>
+        <h1 className="text-[24px] font-bold leading-[30px] tracking-display text-foreground">Lainnya</h1>
         <p className="text-[13px] text-muted-foreground">Profil, kategori, dan preferensi.</p>
       </header>
 

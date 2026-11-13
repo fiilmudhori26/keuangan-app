@@ -22,35 +22,65 @@ export function Sheet({
   className?: string;
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
+  const onCloseRef = useRef(onClose);
   const [present, setPresent] = useState(open);
   const [active, setActive] = useState(open);
 
+  // Callers pass inline arrows; keep the latest handler without restarting effects.
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
   // Keep the panel mounted long enough to play the closing transition.
   useEffect(() => {
+    let enterFrame = 0;
+    let exitFrame = 0;
+    let exitTimer: ReturnType<typeof setTimeout> | undefined;
+
     if (open) {
-      setPresent(true);
-      const frame = requestAnimationFrame(() => setActive(true));
-      return () => cancelAnimationFrame(frame);
+      enterFrame = requestAnimationFrame(() => {
+        setPresent(true);
+        exitFrame = requestAnimationFrame(() => setActive(true));
+      });
+    } else {
+      exitFrame = requestAnimationFrame(() => setActive(false));
+      exitTimer = setTimeout(() => setPresent(false), EXIT_MS);
     }
-    setActive(false);
-    const timeout = setTimeout(() => setPresent(false), EXIT_MS);
-    return () => clearTimeout(timeout);
+
+    return () => {
+      cancelAnimationFrame(enterFrame);
+      cancelAnimationFrame(exitFrame);
+      if (exitTimer) clearTimeout(exitTimer);
+    };
   }, [open]);
 
+  // Focus, ESC, and scroll lock only once the panel is actually mounted.
   useEffect(() => {
-    if (!open) return;
+    if (!open || !present) return;
+    const panel = panelRef.current;
+    if (!panel) return;
+
+    if (!triggerRef.current && document.activeElement instanceof HTMLElement) {
+      triggerRef.current = document.activeElement;
+    }
+    panel.focus();
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
     const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    panelRef.current?.focus();
+
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = previous;
+      const trigger = triggerRef.current;
+      triggerRef.current = null;
+      if (trigger && document.contains(trigger)) trigger.focus();
     };
-  }, [open, onClose]);
+  }, [open, present]);
 
   if (!present) return null;
 
@@ -58,11 +88,11 @@ export function Sheet({
     <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
       <div
         className={cn(
-          "absolute inset-0 bg-black/40 transition-opacity ease-out",
+          "absolute inset-0 bg-overlay transition-opacity ease-out",
           active ? "opacity-100" : "opacity-0",
         )}
-        style={{ transitionDuration: "var(--motion-base)" }}
-        onClick={onClose}
+        style={{ transitionDuration: active ? "var(--motion-base)" : "var(--motion-slow)" }}
+        onClick={() => onCloseRef.current()}
         aria-hidden
       />
       <div
@@ -73,7 +103,7 @@ export function Sheet({
         tabIndex={-1}
         style={{ transitionDuration: active ? "var(--motion-sheet)" : "var(--motion-slow)" }}
         className={cn(
-          "relative flex max-h-[92dvh] w-full max-w-[480px] flex-col rounded-t-[24px] border border-border bg-surface-raised sm:rounded-[20px]",
+          "relative flex max-h-[92dvh] w-full max-w-[480px] flex-col rounded-t-sheet border border-border bg-surface-raised sm:rounded-hero",
           "pb-[env(safe-area-inset-bottom)] transition-[opacity,transform] ease-out",
           active ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0",
           className,
@@ -84,9 +114,9 @@ export function Sheet({
           <h2 className="mt-3 text-[18px] font-semibold text-foreground">{title}</h2>
           <button
             type="button"
-            onClick={onClose}
+            onClick={() => onCloseRef.current()}
             aria-label="Tutup"
-            className="mt-3 flex size-11 items-center justify-center rounded-[10px] text-muted-foreground transition-colors duration-150 hover:bg-muted"
+            className="mt-3 flex size-11 items-center justify-center rounded-btn text-muted-foreground transition-colors duration-150 ease-out hover:bg-muted"
           >
             <X className="size-5" aria-hidden />
           </button>

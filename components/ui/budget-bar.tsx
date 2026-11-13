@@ -22,7 +22,7 @@ export function BudgetBar({
     <div>
       <div className="h-2 w-full overflow-hidden rounded-full bg-border">
         <div
-          className={cn("animate-bar h-full rounded-full transition-[width] duration-200 ease-out", color)}
+          className={cn("animate-bar h-full rounded-full transition-[width] duration-[var(--motion-base)] ease-out", color)}
           style={{ width: `${width}%` }}
         />
       </div>

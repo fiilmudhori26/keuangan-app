@@ -57,7 +57,7 @@ function NavLink({
       href={href}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex min-w-[64px] flex-col items-center justify-center gap-1 rounded-[10px] text-[12px] font-medium transition-colors duration-150 ease-out",
+        "flex min-w-[64px] flex-col items-center justify-center gap-1 rounded-btn text-[12px] font-medium transition-colors duration-[var(--motion-base)] ease-out",
         active ? "text-primary" : "text-muted-foreground hover:text-foreground",
       )}
     >
@@ -65,12 +65,12 @@ function NavLink({
         <span
           aria-hidden
           className={cn(
-            "absolute inset-0 rounded-full bg-secondary transition-opacity duration-200 ease-out",
+            "absolute inset-0 rounded-full bg-secondary transition-opacity duration-[var(--motion-base)] ease-out",
             active ? "opacity-100" : "opacity-0",
           )}
         />
         <Icon
-          className="relative size-6 transition-transform duration-200 ease-out"
+          className="relative size-6"
           aria-hidden
           strokeWidth={active ? 2.4 : 2}
         />

@@ -14,18 +14,18 @@ export function MonthSwitcher({ month, basePath }: { month: string; basePath: st
       <Link
         href={`${basePath}?month=${shiftMonth(month, -1)}`}
         aria-label="Bulan sebelumnya"
-        className="flex size-11 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-muted"
+        className="flex size-11 items-center justify-center rounded-btn text-muted-foreground transition-colors duration-150 hover:bg-muted"
       >
         <ChevronLeft className="size-5" aria-hidden />
       </Link>
-      <span className="min-w-[132px] text-center text-[15px] font-semibold text-foreground">
+      <span className="min-w-[132px] text-center text-[16px] leading-[24px] font-semibold text-foreground">
         {formatMonthLabel(month)}
       </span>
       {canGoNext ? (
         <Link
           href={`${basePath}?month=${next}`}
           aria-label="Bulan berikutnya"
-          className="flex size-11 items-center justify-center rounded-[10px] text-muted-foreground hover:bg-muted"
+          className="flex size-11 items-center justify-center rounded-btn text-muted-foreground transition-colors duration-150 hover:bg-muted"
         >
           <ChevronRight className="size-5" aria-hidden />
         </Link>

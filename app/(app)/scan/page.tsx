@@ -12,7 +12,7 @@ export default async function ScanPage() {
   return (
     <div className="space-y-4">
       <header>
-        <h1 className="text-[24px] font-bold leading-[30px] text-foreground">Scan struk</h1>
+        <h1 className="text-[24px] font-bold leading-[30px] tracking-display text-foreground">Scan struk</h1>
         <p className="text-[13px] text-muted-foreground">
           Ubah foto struk atau kalimat singkat menjadi draf transaksi.
         </p>
