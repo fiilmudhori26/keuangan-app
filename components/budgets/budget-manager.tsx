@@ -2,11 +2,12 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { Field, Input, Select } from "@/components/ui/input";
 import { Panel } from "@/components/ui/panel";
+import { EmptyState } from "@/components/ui/empty-state";
 import { BudgetBar } from "@/components/ui/budget-bar";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
@@ -95,11 +96,12 @@ export function BudgetManager({
       </Button>
 
       {progress.length === 0 ? (
-        <Panel>
-          <p className="text-[14px] text-muted-foreground">
-            Belum ada anggaran bulan ini. Tetapkan batas per kategori agar pengeluaran lebih terkendali.
-          </p>
-        </Panel>
+        <EmptyState
+          icon={Target}
+          message="Belum ada anggaran bulan ini. Tetapkan batas per kategori agar pengeluaran lebih terkendali."
+          actionLabel="Atur anggaran"
+          onAction={openAdd}
+        />
       ) : (
         <div className="space-y-2">
           {progress.map((item) => (

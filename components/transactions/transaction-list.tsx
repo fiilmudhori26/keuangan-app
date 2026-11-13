@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { MoreHorizontal, ReceiptText } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { TransactionSheet } from "./transaction-sheet";
 import { deleteTransactionAction } from "@/app/actions/transactions";
@@ -44,23 +44,12 @@ export function TransactionList({
 
   if (transactions.length === 0) {
     return (
-      <div className="flex flex-col items-center rounded-panel border border-dashed border-border px-6 py-10 text-center">
-        <span
-          aria-hidden
-          className="flex size-12 items-center justify-center rounded-full bg-secondary text-secondary-foreground"
-        >
-          <ReceiptText className="size-6" />
-        </span>
-        <p className="mt-3 max-w-[30ch] text-[16px] leading-6 text-muted-foreground">{emptyMessage}</p>
-        <div className="mt-4 flex justify-center">
-          <Link
-            href="/transactions?add=1"
-            className="flex h-11 items-center rounded-[10px] bg-primary px-4 text-[14px] font-semibold text-primary-foreground transition-[background-color,transform] duration-150 ease-out active:scale-[0.98] motion-reduce:active:scale-100"
-          >
-            Tambah transaksi
-          </Link>
-        </div>
-      </div>
+      <EmptyState
+        icon={ReceiptText}
+        message={emptyMessage}
+        actionLabel="Tambah transaksi"
+        actionHref="/transactions?add=1"
+      />
     );
   }
 
@@ -97,7 +86,7 @@ export function TransactionList({
                 >
                   <span
                     aria-hidden
-                    className="flex size-9 shrink-0 items-center justify-center rounded-full text-[13px] font-bold"
+                    className="flex size-10 shrink-0 items-center justify-center rounded-full text-[13px] font-bold"
                     style={{
                       backgroundColor: category?.color
                         ? `${category.color}22`
@@ -125,7 +114,7 @@ export function TransactionList({
                         ? "num text-[16px] font-semibold text-muted-foreground"
                         : transaction.type === "income"
                           ? "num text-[16px] font-semibold text-primary"
-                          : "num text-[16px] font-semibold text-foreground"
+                          : "num text-[16px] font-semibold text-destructive"
                     }
                   >
                     {isTransfer ? "↔ " : transaction.type === "income" ? "+" : "−"}

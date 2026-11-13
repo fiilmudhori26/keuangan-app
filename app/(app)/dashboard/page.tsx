@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Settings2 } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, ChevronRight, Settings2, Target } from "lucide-react";
 import { requireUser } from "@/lib/session";
 import { repo } from "@/lib/data/repo.demo";
 import { isDemoMode } from "@/lib/db";
@@ -12,14 +12,16 @@ import {
   withBalances,
 } from "@/lib/services/finance";
 import { monthRange, isValidMonthKey, shiftMonth } from "@/lib/date";
-import { formatRupiah } from "@/lib/money";
+import { formatRupiah, formatCompact } from "@/lib/money";
 import { MonthSwitcher } from "@/components/month-switcher";
 import { QuickAddButton } from "@/components/transactions/transaction-sheet";
 import { TransactionList } from "@/components/transactions/transaction-list";
-import { TrendChart, CompactDelta } from "@/components/charts/trend-chart";
+import { TrendChart } from "@/components/charts/trend-chart";
 import { BudgetBar } from "@/components/ui/budget-bar";
 import { CountUp } from "@/components/ui/count-up";
 import { Panel, SectionHeader } from "@/components/ui/panel";
+import { EmptyState } from "@/components/ui/empty-state";
+import { cn } from "@/lib/utils";
 
 export default async function DashboardPage({
   searchParams,
@@ -55,9 +57,18 @@ export default async function DashboardPage({
     [],
   );
   const delta = totals.net - prevTotals.net;
+  const deltaPositive = delta >= 0;
+  const displayName = (profile.displayName || user.name).trim();
+  const initial = ([...displayName][0] ?? "?").toUpperCase();
+  const incomeDeltaPct =
+    prevTotals.income > 0 ? ((totals.income - prevTotals.income) / prevTotals.income) * 100 : null;
+  const expenseDeltaPct =
+    prevTotals.expense > 0
+      ? ((totals.expense - prevTotals.expense) / prevTotals.expense) * 100
+      : null;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {isDemoMode ? (
         <p className="rounded-[10px] border border-border bg-warn-soft px-3 py-2 text-[12px] text-warn-text">
           Mode demo: data disimpan di memori server. Isi <code>DATABASE_URL</code> untuk memakai Neon.
@@ -65,9 +76,17 @@ export default async function DashboardPage({
       ) : null}
 
       <header className="flex items-center justify-between gap-2">
-        <div>
-          <p className="text-[13px] text-muted-foreground">Halo, {profile.displayName || user.name}</p>
-          <MonthSwitcher month={month} basePath="/dashboard" />
+        <div className="flex min-w-0 items-center gap-3">
+          <span
+            aria-hidden
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary text-[16px] font-semibold text-primary"
+          >
+            {initial}
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-[13px] text-muted-foreground">Halo, {displayName}</p>
+            <MonthSwitcher month={month} basePath="/dashboard" />
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <QuickAddButton wallets={wallets} categories={categories} label="Catat" />
@@ -81,16 +100,33 @@ export default async function DashboardPage({
         </div>
       </header>
 
-      <Panel className="rounded-[20px] p-5">
-        <p className="text-[13px] font-medium text-muted-foreground">Saldo total</p>
+      <Panel className="rounded-[20px] border-border bg-surface-raised p-6">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[13px] font-medium text-muted-foreground">Saldo total</p>
+          <span
+            role="img"
+            className={cn(
+              "inline-flex items-center gap-1 rounded-[10px] px-2 py-1 text-[14px] leading-[20px] font-semibold",
+              deltaPositive ? "bg-secondary text-primary" : "bg-expense-soft text-expense-text",
+            )}
+            aria-label={`Selisih bulan ini dibanding bulan lalu: ${deltaPositive ? "plus" : "minus"} ${formatCompact(Math.abs(delta))}`}
+          >
+            {deltaPositive ? (
+              <ArrowUpRight className="size-3.5" aria-hidden />
+            ) : (
+              <ArrowDownRight className="size-3.5" aria-hidden />
+            )}
+            <span className="num">
+              {deltaPositive ? "+" : "−"}
+              {formatCompact(Math.abs(delta))}
+            </span>
+          </span>
+        </div>
         <CountUp
           value={totalBalance(walletBalances)}
-          className="num mt-1 text-[40px] font-bold leading-[44px] tracking-display text-foreground"
+          className="num mt-1 text-[44px] font-bold leading-[48px] tracking-display text-foreground"
         />
         <TrendChart data={trend} />
-        <p className="mt-1 text-[13px] text-muted-foreground">
-          <CompactDelta value={delta} />
-        </p>
       </Panel>
 
       <div className="grid grid-cols-2 gap-3">
@@ -99,12 +135,34 @@ export default async function DashboardPage({
           <p className="num mt-1 text-[18px] font-semibold text-primary">
             +{formatRupiah(totals.income)}
           </p>
+          {incomeDeltaPct !== null && Math.abs(Math.round(incomeDeltaPct)) !== 0 ? (
+            <p
+              className={cn(
+                "num mt-1 text-[12px] font-semibold",
+                incomeDeltaPct >= 0 ? "text-primary" : "text-destructive",
+              )}
+            >
+              {incomeDeltaPct >= 0 ? "+" : "−"}
+              {Math.abs(Math.round(incomeDeltaPct))}% vs bln lalu
+            </p>
+          ) : null}
         </Panel>
         <Panel className="p-4">
           <p className="text-[13px] text-muted-foreground">Keluar</p>
           <p className="num mt-1 text-[18px] font-semibold text-foreground">
             −{formatRupiah(totals.expense)}
           </p>
+          {expenseDeltaPct !== null && Math.abs(Math.round(expenseDeltaPct)) !== 0 ? (
+            <p
+              className={cn(
+                "num mt-1 text-[12px] font-semibold",
+                expenseDeltaPct <= 0 ? "text-primary" : "text-destructive",
+              )}
+            >
+              {expenseDeltaPct >= 0 ? "+" : "−"}
+              {Math.abs(Math.round(expenseDeltaPct))}% vs bln lalu
+            </p>
+          ) : null}
         </Panel>
       </div>
 
@@ -118,14 +176,12 @@ export default async function DashboardPage({
           }
         />
         {progress.length === 0 ? (
-          <Panel>
-            <p className="text-[14px] text-muted-foreground">
-              Belum ada anggaran bulan ini.{" "}
-              <Link href="/budgets" className="font-semibold text-primary">
-                Atur anggaran
-              </Link>
-            </p>
-          </Panel>
+          <EmptyState
+            icon={Target}
+            message="Belum ada anggaran bulan ini."
+            actionLabel="Atur anggaran"
+            actionHref="/budgets"
+          />
         ) : (
           <Panel className="space-y-4">
             {progress.slice(0, 3).map((item) => (

@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Keuangan">
-  <rect width="512" height="512" rx="108" fill="#0B7A4B"/>
-  <path d="M160 352 L256 256 L256 160 L160 256 Z" fill="#FFFFFF" opacity="0.9"/>
-  <path d="M256 352 L352 256 L352 160 L256 256 Z" fill="#FFFFFF"/>
+  <rect width="512" height="512" rx="112" fill="#0B7A4B"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="56" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M182 150 V362"/>
+    <path d="M352 150 L218 256 L352 362"/>
+  </g>
 </svg>

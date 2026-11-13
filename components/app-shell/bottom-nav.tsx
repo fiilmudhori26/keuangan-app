@@ -61,16 +61,15 @@ function NavLink({
         active ? "text-primary" : "text-muted-foreground hover:text-foreground",
       )}
     >
-      <span className="relative flex h-8 w-14 items-center justify-center">
-        <span
-          aria-hidden
-          className={cn(
-            "absolute inset-0 rounded-full bg-secondary transition-opacity duration-[var(--motion-base)] ease-out",
-            active ? "opacity-100" : "opacity-0",
-          )}
-        />
+      <span
+        aria-hidden
+        className={cn(
+          "flex size-9 items-center justify-center rounded-full transition-colors duration-[var(--motion-base)] ease-out",
+          active ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+        )}
+      >
         <Icon
-          className="relative size-6"
+          className="size-6"
           aria-hidden
           strokeWidth={active ? 2.4 : 2}
         />

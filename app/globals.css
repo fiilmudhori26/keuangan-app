@@ -25,6 +25,7 @@
   --warn-text: #8f5a0a;
   --warn-soft: #fbf0d9;
   --expense-soft: #fbe7e5;
+  --expense-text: #b33226;
   --surface-raised: #ffffff;
   --overlay: color-mix(in oklab, #0e1a15 40%, transparent);
   --radius: 10px;
@@ -55,17 +56,18 @@
   --secondary: #12352a;
   --secondary-foreground: #34c38a;
   --muted: #1b2520;
-  --muted-foreground: #93a59b;
+  --muted-foreground: #a8b9ae;
   --accent: #12352a;
   --accent-foreground: #34c38a;
   --destructive: #f0716a;
-  --border: #26332c;
-  --input: #26332c;
+  --border: #2e3e35;
+  --input: #2e3e35;
   --ring: #34c38a;
   --warn: #e0a93b;
   --warn-text: #f0c66b;
   --warn-soft: #33280f;
   --expense-soft: #3a1b19;
+  --expense-text: #f0716a;
   --surface-raised: #1b2520;
   --overlay: color-mix(in oklab, #000000 60%, transparent);
 }
@@ -93,6 +95,7 @@
   --color-warn-text: var(--warn-text);
   --color-warn-soft: var(--warn-soft);
   --color-expense-soft: var(--expense-soft);
+  --color-expense-text: var(--expense-text);
   --color-surface-raised: var(--surface-raised);
   --color-overlay: var(--overlay);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;

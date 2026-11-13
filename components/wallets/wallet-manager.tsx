@@ -2,13 +2,14 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeftRight, Plus } from "lucide-react";
+import { ArrowLeftRight, Plus, Wallet as WalletIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { Field, Input, Select } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
 import { Panel } from "@/components/ui/panel";
+import { EmptyState } from "@/components/ui/empty-state";
 import { TransactionSheet } from "@/components/transactions/transaction-sheet";
 import { createWalletAction, updateWalletAction, archiveWalletAction } from "@/app/actions/wallets";
 import { formatRupiah, parseAmountInput } from "@/lib/money";
@@ -98,11 +99,12 @@ export function WalletManager({
       </div>
 
       {wallets.length === 0 ? (
-        <Panel>
-          <p className="text-[14px] text-muted-foreground">
-            Tambahkan dompet untuk mulai mencatat.
-          </p>
-        </Panel>
+        <EmptyState
+          icon={WalletIcon}
+          message="Tambahkan dompet untuk mulai mencatat."
+          actionLabel="Tambah dompet"
+          onAction={openAdd}
+        />
       ) : (
         <ul className="space-y-2">
           {wallets.map((wallet) => (

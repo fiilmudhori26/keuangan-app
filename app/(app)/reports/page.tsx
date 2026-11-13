@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Download } from "lucide-react";
+import { ChartPie, Download } from "lucide-react";
 import { requireUser } from "@/lib/session";
 import { repo } from "@/lib/data/repo.demo";
 import { currentMonth } from "@/lib/services/queries";
@@ -9,6 +9,7 @@ import { formatRupiah } from "@/lib/money";
 import { MonthSwitcher } from "@/components/month-switcher";
 import { CategoryDonut, MonthComparison } from "@/components/charts/category-charts";
 import { Panel, SectionHeader } from "@/components/ui/panel";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export default async function ReportsPage({
   searchParams,
@@ -54,7 +55,7 @@ export default async function ReportsPage({
   const avgPerDay = daysWithSpending > 0 ? Math.round(totals.expense / daysWithSpending) : 0;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <header className="flex items-start justify-between gap-2">
         <div>
           <h1 className="text-[24px] font-bold leading-[30px] tracking-display text-foreground">Laporan</h1>
@@ -63,6 +64,15 @@ export default async function ReportsPage({
         <MonthSwitcher month={month} basePath="/reports" />
       </header>
 
+      {transactions.length === 0 ? (
+        <EmptyState
+          icon={ChartPie}
+          message="Belum ada laporan bulan ini. Catat transaksi untuk melihat ringkasan dan perbandingan."
+          actionLabel="Tambah transaksi"
+          actionHref="/transactions?add=1"
+        />
+      ) : (
+        <>
       <Panel className="space-y-3">
         <div className="grid grid-cols-3 gap-2 text-center">
           <div>
@@ -128,6 +138,8 @@ export default async function ReportsPage({
           </Panel>
         </section>
       ) : null}
+        </>
+      )}
     </div>
   );
 }
