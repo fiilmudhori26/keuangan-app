@@ -112,7 +112,7 @@ Kategori di atas 8 digabung ke "Lainnya".
 | `body` | 16 / 24 | 400 | Teks isi, nama transaksi |
 | `body-strong` | 16 / 24 | 600 | Nominal pada daftar |
 | `body-sm` | 15 / 22 | 400 | Teks pendukung, pesan toast |
-| `label` | 14 / 20 | 600 | Tombol kecil, chip, kendali bantu |
+| `label` | 14 / 20 | 600 | Tombol kecil, chip (termasuk chip cepat nominal), kendali bantu |
 | `caption` | 13 / 18 | 500 | Tanggal, kategori, label |
 | `micro` | 12 / 16 | 500 | Label navigasi bawah |
 
@@ -170,6 +170,10 @@ Kategori di atas 8 digabung ke "Lainnya".
 │ │ 5.200.000│ │ 3.980.000│     │  hijau / −, dengan delta persen vs bln lalu
 │ │ +12%     │ │ −8%      │     │  kecil, brand/destructive (arah menguntungkan/tidak)
 │ └──────────┘ └──────────┘     │
+│                               │
+│ Pengeluaran bulan ini          │  panel donut mini; hanya tampil bila ada pengeluaran
+│ ◉ Makan 34%   Belanja 18%      │  donut 96 px + legend 5 teratas, persen saja + label
+│   Transport 22%  …             │  tanpa nominal; ringkasan sr-only
 │                               │
 │ Anggaran                  Lihat│
 │ Makan      ████████░░ 82%     │  bar + persen
@@ -242,10 +246,20 @@ Panel `surface-raised` dengan border `line`, radius 20, padding 24 px (`p-6`) �
 Angka hero lebih besar dari `display` numpad; seluruh pemakaian hero memakai kelas langsung `text-[44px] leading-[48px]` (tidak ada kelas `.display-lg` khusus).
 
 ### Ringkasan Masuk/Keluar (dashboard)
-Dua kartu `surface` berdampingan. Masing-masing berisi: label ("Masuk"/"Keluar", `caption` muted), nominal `title-2` (pemasukan `brand`, pengeluaran `ink`), dan **delta persen vs bulan sebelumnya** (`micro`/`caption` kecil) tepat di bawahnya. Delta selalu menyertakan tanda `+`/`−` (mis. `+12%`, `−8%`). Warna delta mengikuti arah yang menguntungkan: naiknya Pemasukan atau turunnya Pengeluaran = `brand`; sebaliknya = `destructive`. Bila bulan sebelumnya tidak punya basis (0), delta tidak ditampilkan.
+Dua kartu `surface` berdampingan. Masing-masing berisi: label ("Masuk"/"Keluar", `caption` muted), nominal `title-2` (pemasukan `brand`, pengeluaran `ink`), dan **delta persen vs bulan sebelumnya** (`micro`/`caption` kecil) tepat di bawahnya. Delta selalu menyertakan tanda `+`/`-` (mis. `+12%`, `-8%`). Warna delta mengikuti arah yang menguntungkan: naiknya Pemasukan atau turunnya Pengeluaran = `brand`; sebaliknya = `destructive`. Bila bulan sebelumnya tidak punya basis (0), delta tidak ditampilkan. **Kartu adalah tautan** ke daftar transaksi terfilter: Masuk → `/transactions?type=income`, Keluar → `/transactions?type=expense`. Tautan mencakup seluruh kartu (target ≥ 44 px), hover `muted` 40%, fokus keyboard terlihat; kartu tidak memuat elemen interaktif lain.
+
+### Pengeluaran bulan ini (donut mini, dashboard)
+Panel ringkas tepat setelah kartu Masuk/Keluar, sebelum Anggaran; **hanya tampil bila ada pengeluaran bulan ini** (total keluar > 0), jika nol panel disembunyikan. Isi: `SectionHeader` "Pengeluaran bulan ini" + panel `surface` berisi `CategoryDonut` varian `compact` (prop `compact?: boolean` di `components/charts/category-charts.tsx`): donut 96 px (`h-24 w-24`) dengan total di tengah dihilangkan, legend **5 kategori teratas** berupa titik warna + label + **persentase saja** (tanpa nominal). Warna irisan memakai `CHART_COLORS` (atau warna kategori bila ada). Ringkasan `sr-only` menyebut nominal per kategori untuk pembaca layar. Data dihitung dari `spendingByCategory(monthTransactions)` (sama dengan sumber Laporan), diurutkan menurun. Panel tidak memuat tautan atau kontrol lain; nominal tidak disamarkan oleh mode privasi (ikut aturan "grafik tidak disamarkan").
 
 ### Header dashboard
-Di samping sapaan "Halo, \<nama\>" tampil **avatar inisial**: lingkaran `brand-soft` berisi inisial pertama nama (`label`/`body-strong`, warna `brand`), ukuran 36–40 px, `aria-hidden` (nama sudah terbaca dari teks sapaan).
+Di samping sapaan "Halo, \<nama\>" tampil **avatar inisial**: lingkaran `brand-soft` berisi inisial pertama nama (`label`/`body-strong`, warna `brand`), ukuran 36-40 px, `aria-hidden` (nama sudah terbaca dari teks sapaan). **Di bawah sapaan** tampil tanggal hari ini dalam Bahasa Indonesia (`caption` 12 px, `muted`), format `Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })` — mis. "Jumat, 14 November" — diikuti pemilih bulan pada baris berikutnya.
+
+### Sembunyikan saldo (privasi)
+Mode privasi untuk dashboard; berguna saat layar terlihat orang lain. Preferensi disimpan **hanya di client** pada localStorage key `keuangan-hide-balance` (default tampil; `1` = disembunyikan); tidak disimpan di server, database, atau profil. Dua titik kendali yang sinkron (lewat event `storage` dan event khusus `keuangan-hide-balance-change`):
+1. Tombol ikon **mata / mata-off** (`Eye`/`EyeOff`) di header dashboard, target sentuh 44 px, `aria-pressed` dan `aria-label` yang menyebut state ("Sembunyikan saldo" / "Tampilkan saldo").
+2. Sakelar "Tampilkan saldo" di Pengaturan ▸ Preferensi (on = saldo tampil, default).
+
+Saat tersembunyi, nominal di dashboard dirender `Rp •••••`: saldo total (hero), nominal Masuk dan Keluar, dan baris nominal pada anggaran (spent/limit). Teks disamarkan, bukan dihapus dari tata letak (tidak ada layout shift), dan diberi `role="img"` + `aria-label="Nominal disembunyikan"`. Daftar transaksi terbaru, chip selisih, dan grafik tidak disamarkan. Tidak ada animasi baru; pergantian langsung.
 
 ### Keadaan kosong (Empty state)
 Komponen terpusat `components/ui/empty-state.tsx`. Struktur: panel `surface` radius 14, border `line`; ikon besar (32 px) di dalam lingkaran `brand-soft` (64 px), warna ikon `brand`; kalimat `body` `muted-foreground` (maks ±32 ch, di tengah); CTA `Button` variant `primary` (size `auto`) atau tautan bergaya tombol utama. Dipakai di empat layar: belum ada transaksi, belum ada dompet, belum ada anggaran, belum ada laporan. Salinan mengikuti kosakata baku §8.
@@ -267,10 +281,23 @@ Status: *hover* (desktop) menaikkan kontras 1 tingkat; *pressed* mengecilkan ska
 Tinggi 48, radius 10, border `line`, latar `surface`. Fokus: cincin 2 px `brand`. Galat: border `expense` + pesan di bawah input. Label selalu terlihat (tidak hanya placeholder).
 
 ### Input nominal
-Angka sangat besar (`display`), awalan "Rp" lebih kecil dan `muted`. Pemisah ribuan titik muncul saat mengetik. Hanya menerima bilangan bulat.
+Angka sangat besar (`display`), awalan "Rp" lebih kecil dan `muted`. Pemisah ribuan titik muncul saat mengetik. Hanya menerima bilangan bulat; nominal dibatasi `MAX_AMOUNT` (Rp 999.999.999.999) — input dipotong di batas. Keypad 3×4 ("1"–"9", "000", "0", ⌫) di bawahnya. Di antara tampilan nominal dan keypad tersedia **chip cepat** satu baris empat kolom: "+10 rb", "+25 rb", "+50 rb", "+100 rb". Menekan chip **menambahkan** kelipatan itu ke nominal berjalan (mis. 50.000 + "+25 rb" = 75.000); pada nominal 0 chip mengisi langsung (mis. 25.000). Hasil penjumlahan ikut dibatasi `MAX_AMOUNT`. Chip memakai peran `label` (14/20), tinggi 44 px (`h-11`), radius 10 px (`rounded-btn`), border `line`, tanpa latar isi; target sentuh ≥ 44 px dengan jarak `gap-2`.
+
+### Date picker (bottom sheet kalender)
+Pengganti `<input type="date">` pada form transaksi dan draf scan; komponen `components/ui/date-picker-sheet.tsx` membungkus `Sheet` yang sudah ada. Isi dari atas ke bawah: baris navigasi — tombol ikon ‹ (`aria-label` "Bulan sebelumnya"), label bulan Indonesia lengkap + tahun (format id-ID, mis. "November 2026"), tombol ikon › (`aria-label` "Bulan berikutnya", dinonaktifkan saat menampilkan bulan berjalan — tanggal masa depan tidak dipilih); grid kalender Senin–Minggu dengan nama hari "Sen Sel Rab Kam Jum Sab Min"; tombol teks "Hari ini" (`aria-label` "Hari ini") yang melompat ke hari ini. Hari terpilih ditandai latar `brand` dengan teks `on-brand` bobot 600 dan `aria-pressed="true"`; hari ini yang belum terpilih diberi cincin border `brand`; hari di atas `max` (bawaan hari ini) nonaktif: opasitas 40%, tidak dapat difokuskan. Struktur ARIA `grid`/`row`/`gridcell`; tombol hari memakai `aria-label` tanggal lengkap id-ID dan dapat dinavigasi dengan tombol panah (kiri/kanan ±1 hari, atas/bawah ±7 hari). Saat terbuka fokus mendarat di sel tanggal 1; `Esc` menutup picker saja (sheet induk tetap terbuka) dan fokus kembali ke pemicu. Pemicu berupa tombol bergaya field (label "Tanggal" terlihat di atas, bukan placeholder): tinggi 48 px, radius 10 px, border `input`, latar `surface`, ikon kalender `muted`, teks `formatDateKey` id-ID ("12 Nov 2026"), target sentuh ≥ 44 px, `aria-haspopup="dialog"`. Animasi: konten grid memakai `.animate-fade-up-fast` hanya saat terbuka dan mati total pada `prefers-reduced-motion` (konsisten dengan pola repo).
 
 ### Baris transaksi
-Ikon kategori bulat `size-10` (40 px; latar `brand-soft` atau warna kategori 15%), nama dan catatan di kiri (`body`, `caption`), nominal di kanan (`body-strong`). Pemasukan `brand` dengan "+", pengeluaran `destructive` dengan "−" — daftar transaksi boleh memakai merah untuk pengeluaran karena tandanya eksplisit; transfer tetap `muted-foreground` dengan "↔". Geser untuk ubah/hapus, dengan alternatif tombol menu untuk aksesibilitas. Saat daftar pertama tampil, baris muncul berurutan: `fade-up` 240 ms dengan jeda 30 ms per baris, dibatasi maksimal 8 baris pertama. Baris punya latar hover `muted` 40% di desktop.
+Ikon kategori bulat `size-10` (40 px; latar `brand-soft` atau warna kategori 15%), nama dan catatan di kiri (`body`, `caption`), nominal di kanan (`body-strong`). Pemasukan `brand` dengan "+", pengeluaran `destructive` dengan "-" - daftar transaksi boleh memakai merah untuk pengeluaran karena tandanya eksplisit; transfer tetap `muted-foreground` dengan "↔".
+
+**Geser untuk aksi (swipe):** baris mendukung geser horizontal dengan pointer events (`onPointerDown/Move/Up` + `setPointerCapture`, `touch-action: pan-y` agar gulir vertikal tidak terganggu). Threshold **72 px**:
+- Geser ke **kiri** → aksi **Hapus**: ikon `Trash2` + teks warna `danger`/`destructive`, latar aksi `expense-soft` saat melewati threshold (di bawah threshold latar `muted`).
+- Geser ke **kanan** → aksi **Ubah**: ikon `Pencil` + teks warna `primary`, latar aksi `secondary` saat melewati threshold.
+- **Transfer:** hanya geser kiri ("Hapus transfer"); geser kanan diabaikan - transfer tidak dapat diubah.
+- Latar aksi ("haptic-like") muncul saat ambang 72 px terlewati, sebagai umpan balik sebelum aksi dilepas.
+- Pelepasan di atas threshold menjalankan aksi: Hapus → dialog konfirmasi (alur yang sama dengan menu); Ubah → membuka sheet ubah. Di bawah threshold baris kembali ke posisi semula.
+- **Aksesibilitas:** tombol menu "Aksi untuk transaksi…" (ikon `MoreHorizontal`) selalu tersedia pada setiap baris dan tidak dihapus; aksi geser bersifat tambahan dan dekoratif (lapisan aksi `aria-hidden`).
+- **Reduced motion:** bila `prefers-reduced-motion: reduce`, transisi geser (transform & warna latar aksi) dimatikan; baris berpindah langsung. State geser direset saat baris unmount atau tipe transaksi berubah.
+- Saat daftar pertama tampil, baris muncul berurutan: `fade-up` 240 ms dengan jeda 30 ms per baris, dibatasi maksimal 8 baris pertama. Baris punya latar hover `muted` 40% di desktop.
 
 ### Bar anggaran
 Tinggi 8, radius penuh, latar `line`. Isi: `brand` di bawah 80%, `warn` mulai 80%, `expense` mulai 100%. Selalu disertai persentase dan sisa nominal sebagai teks; saat 80% dan 100% tampilkan ikon peringatan. Isi bar terisi dari 0 ke persentase saat pertama tampil (420 ms `ease-out`); perubahan berikutnya memakai transisi lebar 200 ms.
@@ -281,20 +308,35 @@ Radius 10, ikon + nama + saldo kecil. Terpilih: latar `brand-soft`, border `bran
 ### Navigasi bawah
 Lima slot: Beranda, Transaksi, Tambah (tombol bulat `brand`, ukuran 56, menonjol di tengah), Anggaran, Lainnya. Ikon 24 px dengan label `micro`. Slot aktif = **lingkaran `brand` penuh** berisi ikon `on-brand` (putih terang / `#06130D` gelap) dengan label berwarna `brand`; slot non-aktif tetap `muted-foreground`. Latar lingkaran dan warna label bertransisi 180 ms (`--motion-base`) tanpa menggeser tata letak; bobot ikon berganti langsung (`strokeWidth` tidak dapat dianimasikan CSS). `aria-current="page"` tetap dipakai pada slot aktif. Transisi dimatikan saat `prefers-reduced-motion`.
 
+### Pengaturan ("Lainnya") terstruktur
+Satu halaman `/settings`, dikelompokkan dengan `SectionHeader` per grup — **tidak ada route baru**. Urutan dari atas:
+- **Profil** — Panel berisi avatar inisial besar (64 px, `brand-soft`, inisial `brand`, warna teks `brand`, bobot 700), nama tampilan (`body-strong`), dan email (`caption`, `muted`, tidak dapat diubah). Di bawahnya dalam panel yang sama: isian nama tampilan, mata uang (statis IDR), awal bulan anggaran, dan tombol "Simpan pengaturan".
+- **Preferensi** — Panel berisi: segmen tema (Ikuti sistem / Terang / Gelap, langsung berlaku); sakelar "Tampilkan saldo" (lihat "Sembunyikan saldo"; default on); baris Bahasa ("Indonesia", statis — satu-satunya bahasa saat ini, dengan keterangan kecil).
+- **Manajemen** — Panel-list (baris dipisah garis `line`, tinggi 56 px, ikon `muted` + chevron): Dompet → `/wallets`, Kategori → jangkar `#kategori` pada halaman ini, Anggaran → `/budgets`.
+- **Kategori** — manajer kategori apa adanya (diberi `id="kategori"` agar jangkar Manajemen mendarat tepat).
+- **Tentang** — Panel berisi mark "K" kecil (32 px), "Keuangan", dan teks `caption` `muted`: "Keuangan v0.1 · PWA pencatatan keuangan pribadi".
+- **Zona berbahaya** — tetap paling bawah dengan header sendiri, seperti sebelumnya.
+
+### Banner offline
+Saat perangkat offline atau ada antrean transaksi belum terkirim, tampil banner di atas konten: latar `warn-soft`, border `line`, ikon `WifiOff` (offline) atau `RefreshCw` (antrean menunggu), teks `warn-text` 13 px. Ikon selalu disertai teks penjelas. Banner hilang otomatis saat online dan antrean kosong.
+
 ### Bottom sheet
 Radius atas 24, handle dekoratif 4 × 36, latar `surface-raised` (gelap) / `surface` (terang), peredup latar sesuai token `overlay`, dan tombol tutup. Saat dibuka, peredup memudar 180 ms dan panel naik 24 px selama 260 ms `ease-out`; saat ditutup, keduanya berbalik dalam 240 ms sebelum panel dilepas. Fokus dipindah ke panel, ESC menutup, dan gulir halaman dikunci selama sheet terbuka.
 
 ### Grafik
-- Donat: pengeluaran per kategori, total di tengah, legenda dengan nominal dan persen.
+- Donat: pengeluaran per kategori, total di tengah, legenda dengan nominal dan persen. Varian `compact` (dashboard) memakai donut 96 px tanpa total di tengah dan legenda 5 teratas berisi persen saja + label.
 - Garis tren: satu seri, tanpa titik kecuali saat disentuh; sumbu minimal.
 - Bar perbandingan bulan: dua batang per kategori (bulan ini vs lalu).
 - Semua grafik punya ringkasan teks yang dapat dibaca pembaca layar.
 
+### Onboarding pertama (welcome)
+Muncul di dashboard hanya saat pengguna belum punya dompet **atau** belum punya transaksi, dan belum pernah ditutup. Panel `surface` radius 14, border `line`, padding 20 px, memuat: tombol tutup (ikon `X`, 44 px) di kanan atas; ikon besar (32 px) di dalam lingkaran `brand-soft` (64 px, warna `brand`, mis. `Sparkles`); judul "Selamat datang di Keuangan!" (`title-2`); satu kalimat pengantar; lalu **dua langkah bernomor**: 1 "Tambah dompet pertamamu" (tautan `/wallets`), 2 "Catat pengeluaran pertamamu" (tautan `/transactions?add=1`). Langkah yang sudah terpenuhi diberi ikon centang di lingkaran `brand`; langkah yang belum berupa nomor di lingkaran `brand-soft`. Tombol primer membawa ke langkah yang belum selesai (dompet dulu, baru transaksi); tombol teks "Nanti saja" menutup panel dan menyimpan flag `keuangan-welcomed` di localStorage. Panel tidak muncul bila flag tersimpan atau setelah dompet dan transaksi sama-sama ada.
+
 ### Toast dan dialog
-Toast di atas navigasi bawah, hilang otomatis 4 detik, menyebut tindakan dengan kata yang sama seperti tombolnya ("Transaksi disimpan"). Toast masuk dengan geser 10 px + pudar (240 ms). Aksi yang tidak bisa dibatalkan memakai dialog konfirmasi; aksi lain menyediakan "Urungkan" pada toast. Dialog konfirmasi muncul dengan `pop-in` ringan (skala 0,96 → 1, 180 ms) di atas peredup yang memudar.
+Toast di atas navigasi bawah, hilang otomatis 4 detik, menyebut tindakan dengan kata yang sama seperti tombolnya ("Transaksi disimpan"). Toast masuk dengan geser 10 px + pudar (240 ms). Toast dapat membawa **satu aksi**: tombol teks (`label`, mis. "Urungkan") di sisi kanan, tinggi sentuh 44 px, warna `brand`, bobot 600; menekannya menjalankan aksi lalu menutup toast. Toast beraksi tampil **6 detik** (bukan 4). Menghapus transaksi biasa memakai toast aksi ini: salinan data transaksi disimpan di memori sebelum hapus; "Urungkan" membuat ulang transaksi dengan id baru via action yang sama. Transfer tidak bisa diurungkan lewat jalur ini (dihapus permanen; dialog konfirmasi menyebutnya). Aksi yang tidak bisa dibatalkan memakai dialog konfirmasi; aksi lain menyediakan "Urungkan" pada toast. Dialog konfirmasi muncul dengan `pop-in` ringan (skala 0,96 → 1, 180 ms) di atas peredup yang memudar.
 
 ### Kerangka memuat
-Gunakan komponen `.skeleton`: latar `muted`, radius mengikuti elemen aslinya, kilau horizontal tipis (`foreground` 8%) berulang 1,4 detik. Susun kerangka meniru layout akhir (judul, panel, baris) agar tidak ada pergeseran tata letak saat data tiba. Saat `prefers-reduced-motion`, kilau dimatikan dan kerangka tampil datar.
+Gunakan komponen `.skeleton`: latar `muted`, radius mengikuti elemen aslinya, kilau horizontal tipis (`foreground` 8%) berulang 1,4 detik. Susun kerangka meniru layout akhir (judul, panel, baris) agar tidak ada pergeseran tata letak saat data tiba. Saat data tiba, konten halaman menggantikan kerangka dengan **`fade-up` 180 ms** (`.animate-fade-up-fast`, `--motion-base`) pada root kontainer halaman; transisi ini hanya terjadi saat konten pertama tampil setelah memuat dan hilang total saat `prefers-reduced-motion`. Saat `prefers-reduced-motion`, kilau dimatikan dan kerangka tampil datar.
 
 ---
 
@@ -319,6 +361,7 @@ Bahasa Indonesia sehari-hari yang sopan, kalimat aktif, sentence case, tanpa bas
 |---|---|
 | Tombol utama | "Simpan transaksi", "Tambah dompet" |
 | Toast sukses | "Transaksi disimpan" |
+| Toast aksi (undo) | "Transaksi dihapus" + tombol "Urungkan" (6 detik) |
 | Galat form | "Nominal belum diisi. Masukkan angka lebih dari 0." |
 | Galat jaringan | "Tidak ada koneksi. Transaksi disimpan di perangkat dan dikirim saat online." |
 | Galat scan | "Struk belum terbaca. Foto ulang dengan cahaya lebih terang atau isi manual." |
@@ -337,7 +380,7 @@ Pesan galat menjelaskan apa yang terjadi dan cara memperbaikinya; tidak meminta 
 Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `--motion-base` 180 ms, `--motion-slow` 240 ms, `--motion-sheet` 260 ms, `--motion-bar` 420 ms, `--motion-count` 700 ms; easing `--ease-out`, `--ease-in-out`; jeda bertahap `--stagger-step` 30 ms.
 
 - **Respons tindakan pengguna:** tombol (150 ms), sheet buka/tutup, toast masuk, dialog konfirmasi, segmented control, chip kategori, dan perubahan nominal (120 ms).
-- **Otomatis, hanya saat konten pertama tampil:** Saldo total menghitung naik sekali saat pertama tampil; perubahan nilai berikutnya (pindah bulan, refresh setelah simpan) berpindah dengan transisi 700 ms dari nilai sebelumnya, bukan dari 0. Baris transaksi `fade-up` berurutan (maksimal 8 baris), isi bar anggaran terisi dari 0, dan garis tren saldo tergambar sekali. Tidak ada animasi masuk pada bagian halaman lain.
+- **Otomatis, hanya saat konten pertama tampil:** Saldo total menghitung naik sekali saat pertama tampil; perubahan nilai berikutnya (pindah bulan, refresh setelah simpan) berpindah dengan transisi 700 ms dari nilai sebelumnya, bukan dari 0. Baris transaksi `fade-up` berurutan (maksimal 8 baris), isi bar anggaran terisi dari 0, konten halaman (dashboard, transaksi, laporan) muncul `fade-up` 180 ms saat menggantikan kerangka memuat, dan garis tren saldo tergambar sekali. Tidak ada animasi masuk pada bagian halaman lain.
 - **Saat menunggu data:** kilau `.skeleton`. Ini satu-satunya animasi yang berulang.
 - Tidak ada animasi saat berpindah halaman atau menggulir.
 - Hormati `prefers-reduced-motion`: durasi dipangkas, kilau kerangka dimatikan, hitungan saldo langsung menampilkan nilai akhir, dan transformasi tekan dinonaktifkan.
@@ -439,10 +482,10 @@ Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `-
 **Font:** muat lewat `next/font/google` (Inter Tight, bobot 400/500/600/700, `display: swap`, variable `--font-inter`) pada `app/layout.tsx`; variable diset pada `body`, `--font-sans` memetakan ke `var(--font-inter)`, dan aktifkan `tabular-nums` pada kelas utilitas `.num` yang dipakai di semua nominal.
 
 **PWA:**
-- `theme_color`: `#0B7A4B` (terang) dan `#0C1210` (gelap) lewat `<meta name="theme-color" media="(prefers-color-scheme: ...)">`.
-- `background_color` manifest: `#F6F8F7`.
+- `theme_color`: `#0B7A4B` di manifest, dan `<meta name="theme-color">` per mode lewat `viewport` di `app/layout.tsx` (`#0B7A4B` terang, `#0C1210` gelap). Keduanya wajib konsisten dengan brand hijau dan kanvas gelap — jangan memakai warna lain.
+- `background_color` manifest: `#F6F8F7` (tetap; layar splash mengikuti warna ini).
 - Ikon: mark "K" putih tebal (700) di atas rounded-square hijau `#0B7A4B` (radius ±22% untuk versi `any`; maskable dan apple-touch-icon penuh tanpa radius dengan zona aman 80%). Ukuran 192, 512, *maskable* 512, dan apple-touch-icon 180; lihat §6 "Logo dan identitas".
-- Layar splash mengikuti warna latar dan ikon.
+- Layar splash: mengikuti `background_color` manifest + ikon maskable; iOS memakai `apple-touch-icon` yang sama. `config.appleWebApp.startupImage` **tidak dipakai** — kompleks (butuh gambar per ukuran perangkat) dan redundan; splash iOS cukup menampilkan warna latar dan ikon aplikasi. `appleWebApp.capable` dan `statusBarStyle: "default"` dibiarkan apa adanya.
 
 ---
 
@@ -470,4 +513,4 @@ Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `-
 
 - Nama dan logo aplikasi: ditetapkan — mark "K" di atas rounded-square `brand` (§6 "Logo dan identitas").
 - Apakah ikon kategori memakai emoji (cepat, tanpa aset) atau set ikon garis seperti Lucide (lebih konsisten)? Rekomendasi awal: Lucide.
-- Perlu mode tampilan "sembunyikan saldo" (privasi saat di tempat umum) di dashboard?
+- Mode tampilan "sembunyikan saldo" (privasi): ditetapkan dan diimplementasikan — lihat §6 "Sembunyikan saldo".

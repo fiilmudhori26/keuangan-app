@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, ReceiptText } from "lucide-react";
+import { MoreHorizontal, Pencil, ReceiptText, Trash2 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useToast } from "@/components/ui/toast";
 import { TransactionSheet } from "./transaction-sheet";
-import { deleteTransactionAction } from "@/app/actions/transactions";
+import { createTransactionAction, deleteTransactionAction } from "@/app/actions/transactions";
+import { usePrefersReducedMotion } from "@/lib/use-prefers-reduced-motion";
 import { formatRupiah } from "@/lib/money";
 import { formatRelativeDate } from "@/lib/date";
 import { groupByDate } from "@/lib/services/finance";
@@ -19,6 +20,164 @@ import type { Category, Transaction, Wallet } from "@/lib/types";
 /** Harus sama dengan --stagger-step di app/globals.css. */
 const STAGGER_STEP = 30;
 const STAGGER_MAX = 8;
+/** Ambang geser sebelum aksi dilepas (px). */
+const SWIPE_THRESHOLD = 72;
+
+/**
+ * Baris yang bisa digeser: kiri = Hapus, kanan = Ubah (transfer: hapus saja).
+ * Lapisan aksi bersifat dekoratif (aria-hidden); tombol menu tetap tersedia
+ * sebagai alternatif aksesibilitas.
+ */
+function SwipeableRow({
+  isTransfer,
+  animated,
+  animationDelay,
+  onEdit,
+  onDelete,
+  children,
+}: {
+  isTransfer: boolean;
+  animated: boolean;
+  animationDelay?: string;
+  onEdit: () => void;
+  onDelete: () => void;
+  children: React.ReactNode;
+}) {
+  const reduceMotion = usePrefersReducedMotion();
+  const [dx, setDx] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const startX = useRef(0);
+  const movedRef = useRef(false);
+  const capturedRef = useRef(false);
+
+  const editPast = dx >= SWIPE_THRESHOLD && !isTransfer;
+  const deletePast = dx <= -SWIPE_THRESHOLD;
+  const actionTransition = reduceMotion
+    ? undefined
+    : "background-color 150ms ease-out, opacity 150ms ease-out";
+
+  function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    startX.current = event.clientX;
+    movedRef.current = false;
+    capturedRef.current = false;
+    setDragging(true);
+  }
+
+  function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (!dragging) return;
+    let delta = event.clientX - startX.current;
+    if (isTransfer && delta > 0) delta = 0; // transfer tidak bisa diubah
+    if (Math.abs(delta) > 6) {
+      movedRef.current = true;
+      // Capture baru dipasang setelah slop terlewati, agar klik pada
+      // tombol di dalam baris (mis. menu aksi) tetap bekerja.
+      if (!capturedRef.current) {
+        capturedRef.current = true;
+        try {
+          event.currentTarget.setPointerCapture(event.pointerId);
+        } catch {
+          // abaikan bila capture tidak tersedia
+        }
+      }
+    }
+    setDx(delta);
+  }
+
+  function endDrag(event: React.PointerEvent<HTMLDivElement>, commit: boolean) {
+    if (!dragging) return;
+    let delta = event.clientX - startX.current;
+    if (isTransfer && delta > 0) delta = 0; // transfer tidak bisa diubah
+    setDragging(false);
+    setDx(0);
+    capturedRef.current = false;
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // pointer capture mungkin belum/sudah dilepas oleh browser
+    }
+    if (!commit) return;
+    if (delta <= -SWIPE_THRESHOLD) onDelete();
+    else if (delta >= SWIPE_THRESHOLD && !isTransfer) onEdit();
+  }
+
+  function cancelDrag() {
+    setDragging(false);
+    setDx(0);
+    capturedRef.current = false;
+    movedRef.current = false;
+  }
+
+  function handleClickCapture(event: React.MouseEvent<HTMLDivElement>) {
+    // Tahan klik (mis. pada tombol menu) bila interaksi barusan adalah geseran.
+    if (movedRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+      movedRef.current = false;
+    }
+  }
+
+  return (
+    <li
+      className={cn("relative overflow-hidden", animated && "animate-fade-up")}
+      style={animated ? { animationDelay } : undefined}
+    >
+      {/* Lapisan aksi di belakang konten */}
+      <div aria-hidden className="absolute inset-0 flex">
+        <div
+          className={cn(
+            "flex flex-1 items-center gap-2 pl-4 text-primary",
+            editPast ? "bg-secondary" : "bg-muted",
+          )}
+          style={{
+            opacity: dx > 0 && !isTransfer ? 1 : 0,
+            transition: actionTransition,
+          }}
+        >
+          <Pencil className="size-5" aria-hidden />
+          <span className="text-[13px] font-semibold">Ubah</span>
+        </div>
+        <div
+          className={cn(
+            "flex flex-1 items-center justify-end gap-2 pr-4 text-destructive",
+            deletePast ? "bg-expense-soft" : "bg-muted",
+          )}
+          style={{
+            opacity: dx < 0 ? 1 : 0,
+            transition: actionTransition,
+          }}
+        >
+          <span className="text-[13px] font-semibold">
+            {isTransfer ? "Hapus transfer" : "Hapus"}
+          </span>
+          <Trash2 className="size-5" aria-hidden />
+        </div>
+      </div>
+      {/* Konten baris (menggeser) */}
+      <div
+        className="relative flex min-h-[56px] touch-pan-y select-none items-center gap-3 bg-background py-2 transition-colors duration-150 hover:bg-muted/40"
+        style={{
+          transform: `translateX(${dx}px)`,
+          transition:
+            reduceMotion || dragging
+              ? undefined
+              : "transform 180ms ease-out, background-color 150ms ease-out",
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={(event) => endDrag(event, true)}
+        onPointerCancel={cancelDrag}
+        onPointerLeave={() => {
+          // Tanpa capture (belum lewat slop), pelepasan di luar baris harus mengakhiri geseran.
+          if (dragging && !capturedRef.current) cancelDrag();
+        }}
+        onClickCapture={handleClickCapture}
+      >
+        {children}
+      </div>
+    </li>
+  );
+}
 
 export function TransactionList({
   transactions,
@@ -76,13 +235,15 @@ export function TransactionList({
               const outgoing = transaction.transferDirection === "out";
 
               return (
-                <li
-                  key={transaction.id}
-                  style={animated ? { animationDelay: `${rowIndex * STAGGER_STEP}ms` } : undefined}
-                  className={cn(
-                    "flex min-h-[56px] items-center gap-3 py-2 transition-colors duration-150 hover:bg-muted/40",
-                    animated && "animate-fade-up",
-                  )}
+                <SwipeableRow
+                  key={`${transaction.id}:${transaction.type}`}
+                  isTransfer={isTransfer}
+                  animated={animated}
+                  animationDelay={
+                    animated ? `${rowIndex * STAGGER_STEP}ms` : undefined
+                  }
+                  onEdit={() => setEditing(transaction)}
+                  onDelete={() => setDeleting(transaction)}
                 >
                   <span
                     aria-hidden
@@ -128,7 +289,7 @@ export function TransactionList({
                   >
                     <MoreHorizontal className="size-5" aria-hidden />
                   </button>
-                </li>
+                </SwipeableRow>
               );
             })}
           </ul>
@@ -179,16 +340,59 @@ export function TransactionList({
       <ConfirmDialog
         open={!!deleting}
         title="Hapus transaksi ini?"
-        description="Saldo dompet akan dihitung ulang. Tindakan ini tidak bisa dibatalkan."
+        description={
+          deleting?.type === "transfer"
+            ? "Saldo dompet akan dihitung ulang. Transfer dihapus permanen dan tidak bisa diurungkan."
+            : "Saldo dompet akan dihitung ulang. Kamu bisa menekan “Urungkan” pada notifikasi (6 detik)."
+        }
         loading={pending}
         onClose={() => setDeleting(null)}
         onConfirm={() => {
-          if (!deleting) return;
+          const target = deleting;
+          if (!target) return;
           startTransition(async () => {
-            const result = await deleteTransactionAction(deleting.id);
-            push(result.message ?? "", result.ok ? "success" : "error");
+            const result = await deleteTransactionAction(target.id);
             setDeleting(null);
             router.refresh();
+            if (!result.ok) {
+              push(result.message ?? "Transaksi gagal dihapus.", "error");
+              return;
+            }
+            const categoryId = target.categoryId;
+            if (target.type !== "transfer" && categoryId) {
+              // Salinan data untuk "Urungkan": buat ulang dengan id baru.
+              const { type } = target;
+              push("Transaksi dihapus", "success", {
+                duration: 6000,
+                action: {
+                  label: "Urungkan",
+                  onAction: () => {
+                    void (async () => {
+                      const restored = await createTransactionAction({
+                        type,
+                        amount: target.amount,
+                        walletId: target.walletId,
+                        categoryId,
+                        occurredAt: target.occurredAt,
+                        note: target.note ?? undefined,
+                        merchant: target.merchant ?? undefined,
+                        receiptPath: target.receiptPath ?? undefined,
+                        source: target.source,
+                      });
+                      push(
+                        restored.ok
+                          ? "Transaksi dikembalikan"
+                          : (restored.message ?? "Transaksi gagal dikembalikan."),
+                        restored.ok ? "success" : "error",
+                      );
+                      router.refresh();
+                    })();
+                  },
+                },
+              });
+            } else {
+              push(result.message ?? "Transaksi dihapus", "success");
+            }
           });
         }}
       />

@@ -118,7 +118,8 @@ export function WalletManager({
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-[16px] font-medium text-foreground">{wallet.name}</p>
                   <p className="text-[13px] text-muted-foreground">
-                    {WALLET_TYPE_LABELS[wallet.type]} · saldo awal {formatRupiah(wallet.initialBalance)}
+                    {WALLET_TYPE_LABELS[wallet.type]} · saldo awal{" "}
+                    <span className="num">{formatRupiah(wallet.initialBalance)}</span>
                   </p>
                 </div>
                 <div className="text-right">

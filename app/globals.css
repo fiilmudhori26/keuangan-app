@@ -198,6 +198,11 @@
   animation: fade-up var(--motion-slow) var(--ease-out) both;
 }
 
+/* Konten pertama setelah kerangka memuat (design.md §6 "Kerangka memuat") */
+.animate-fade-up-fast {
+  animation: fade-up var(--motion-base) var(--ease-out) both;
+}
+
 .animate-sheet-in {
   animation: sheet-in var(--motion-sheet) var(--ease-out) both;
 }

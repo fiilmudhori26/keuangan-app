@@ -29,7 +29,7 @@ export function TrendChart({ data }: { data: Array<{ date: string; value: number
                 const point = payload[0].payload as { date: string; value: number };
                 return (
                   <div className="rounded-[10px] border border-border bg-popover px-2 py-1 text-[12px] text-popover-foreground">
-                    {formatDateKey(point.date)} · {formatRupiah(point.value)}
+                    {formatDateKey(point.date)} · <span className="num">{formatRupiah(point.value)}</span>
                   </div>
                 );
               }}
@@ -47,7 +47,7 @@ export function TrendChart({ data }: { data: Array<{ date: string; value: number
 export function CompactDelta({ value }: { value: number }) {
   const positive = value >= 0;
   return (
-    <span className={positive ? "text-primary" : "text-destructive"}>
+    <span className={`num ${positive ? "text-primary" : "text-destructive"}`}>
       {positive ? "+" : "−"}
       {formatCompact(Math.abs(value))} bln ini
     </span>

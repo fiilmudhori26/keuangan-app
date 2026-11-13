@@ -35,6 +35,7 @@ export default async function ReportsPage({
 
   const slices = Array.from(spending.entries())
     .map(([categoryId, value]) => ({
+      categoryId,
       name: categoryById.get(categoryId)?.name ?? "Tanpa kategori",
       value,
       color: categoryById.get(categoryId)?.color,
@@ -55,7 +56,7 @@ export default async function ReportsPage({
   const avgPerDay = daysWithSpending > 0 ? Math.round(totals.expense / daysWithSpending) : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="animate-fade-up-fast space-y-6">
       <header className="flex items-start justify-between gap-2">
         <div>
           <h1 className="text-[24px] font-bold leading-[30px] tracking-display text-foreground">Laporan</h1>
@@ -95,8 +96,9 @@ export default async function ReportsPage({
           </div>
         </div>
         <p className="border-t border-border pt-3 text-[13px] text-muted-foreground">
-          Bulan lalu: masuk {formatRupiah(prevTotals.income)}, keluar {formatRupiah(prevTotals.expense)}.
-          Rata-rata pengeluaran {formatRupiah(avgPerDay)} per hari aktif.
+          Bulan lalu: masuk <span className="num">{formatRupiah(prevTotals.income)}</span>, keluar{" "}
+          <span className="num">{formatRupiah(prevTotals.expense)}</span>. Rata-rata pengeluaran{" "}
+          <span className="num">{formatRupiah(avgPerDay)}</span> per hari aktif.
         </p>
         <Link
           href={`/api/export?month=${month}`}

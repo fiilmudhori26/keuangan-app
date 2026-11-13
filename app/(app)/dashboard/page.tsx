@@ -8,15 +8,20 @@ import {
   buildBudgetProgress,
   dailyTrend,
   monthTotals,
+  spendingByCategory,
   totalBalance,
   withBalances,
 } from "@/lib/services/finance";
-import { monthRange, isValidMonthKey, shiftMonth } from "@/lib/date";
+import { monthRange, isValidMonthKey, shiftMonth, formatIndonesianLongDate } from "@/lib/date";
 import { formatRupiah, formatCompact } from "@/lib/money";
 import { MonthSwitcher } from "@/components/month-switcher";
+import { BalanceToggle } from "@/components/dashboard/balance-toggle";
+import { OnboardingWelcome } from "@/components/dashboard/onboarding-welcome";
+import { MaskedAmount } from "@/components/ui/hide-balance";
 import { QuickAddButton } from "@/components/transactions/transaction-sheet";
 import { TransactionList } from "@/components/transactions/transaction-list";
 import { TrendChart } from "@/components/charts/trend-chart";
+import { CategoryDonut } from "@/components/charts/category-charts";
 import { BudgetBar } from "@/components/ui/budget-bar";
 import { CountUp } from "@/components/ui/count-up";
 import { Panel, SectionHeader } from "@/components/ui/panel";
@@ -57,6 +62,16 @@ export default async function DashboardPage({
     [],
   );
   const delta = totals.net - prevTotals.net;
+  const categoryById = new Map(categories.map((category) => [category.id, category]));
+  const spending = spendingByCategory(monthTransactions);
+  const spendingSlices = Array.from(spending.entries())
+    .map(([categoryId, value]) => ({
+      categoryId,
+      name: categoryById.get(categoryId)?.name ?? "Tanpa kategori",
+      value,
+      color: categoryById.get(categoryId)?.color,
+    }))
+    .sort((a, b) => b.value - a.value);
   const deltaPositive = delta >= 0;
   const displayName = (profile.displayName || user.name).trim();
   const initial = ([...displayName][0] ?? "?").toUpperCase();
@@ -66,9 +81,10 @@ export default async function DashboardPage({
     prevTotals.expense > 0
       ? ((totals.expense - prevTotals.expense) / prevTotals.expense) * 100
       : null;
+  const todayLabel = formatIndonesianLongDate();
 
   return (
-    <div className="space-y-6">
+    <div className="animate-fade-up-fast space-y-6">
       {isDemoMode ? (
         <p className="rounded-[10px] border border-border bg-warn-soft px-3 py-2 text-[12px] text-warn-text">
           Mode demo: data disimpan di memori server. Isi <code>DATABASE_URL</code> untuk memakai Neon.
@@ -85,11 +101,13 @@ export default async function DashboardPage({
           </span>
           <div className="min-w-0">
             <p className="truncate text-[13px] text-muted-foreground">Halo, {displayName}</p>
+            <p className="text-[12px] leading-4 text-muted-foreground">{todayLabel}</p>
             <MonthSwitcher month={month} basePath="/dashboard" />
           </div>
         </div>
         <div className="flex items-center gap-2">
           <QuickAddButton wallets={wallets} categories={categories} label="Catat" />
+          <BalanceToggle />
           <Link
             href="/settings"
             aria-label="Pengaturan"
@@ -99,6 +117,11 @@ export default async function DashboardPage({
           </Link>
         </div>
       </header>
+
+      <OnboardingWelcome
+        hasWallet={wallets.length > 0}
+        hasTransaction={allTransactions.length > 0}
+      />
 
       <Panel className="rounded-[20px] border-border bg-surface-raised p-6">
         <div className="flex items-center justify-between gap-3">
@@ -122,49 +145,72 @@ export default async function DashboardPage({
             </span>
           </span>
         </div>
-        <CountUp
-          value={totalBalance(walletBalances)}
-          className="num mt-1 text-[44px] font-bold leading-[48px] tracking-display text-foreground"
-        />
+        <MaskedAmount className="mt-1 block text-[44px] font-bold leading-[48px] tracking-display text-foreground">
+          <CountUp
+            value={totalBalance(walletBalances)}
+            className="num text-foreground"
+          />
+        </MaskedAmount>
         <TrendChart data={trend} />
       </Panel>
 
       <div className="grid grid-cols-2 gap-3">
-        <Panel className="p-4">
-          <p className="text-[13px] text-muted-foreground">Masuk</p>
-          <p className="num mt-1 text-[18px] font-semibold text-primary">
-            +{formatRupiah(totals.income)}
-          </p>
-          {incomeDeltaPct !== null && Math.abs(Math.round(incomeDeltaPct)) !== 0 ? (
-            <p
-              className={cn(
-                "num mt-1 text-[12px] font-semibold",
-                incomeDeltaPct >= 0 ? "text-primary" : "text-destructive",
-              )}
-            >
-              {incomeDeltaPct >= 0 ? "+" : "−"}
-              {Math.abs(Math.round(incomeDeltaPct))}% vs bln lalu
-            </p>
-          ) : null}
-        </Panel>
-        <Panel className="p-4">
-          <p className="text-[13px] text-muted-foreground">Keluar</p>
-          <p className="num mt-1 text-[18px] font-semibold text-foreground">
-            −{formatRupiah(totals.expense)}
-          </p>
-          {expenseDeltaPct !== null && Math.abs(Math.round(expenseDeltaPct)) !== 0 ? (
-            <p
-              className={cn(
-                "num mt-1 text-[12px] font-semibold",
-                expenseDeltaPct <= 0 ? "text-primary" : "text-destructive",
-              )}
-            >
-              {expenseDeltaPct >= 0 ? "+" : "−"}
-              {Math.abs(Math.round(expenseDeltaPct))}% vs bln lalu
-            </p>
-          ) : null}
-        </Panel>
+        <Link
+          href="/transactions?type=income"
+          aria-label="Lihat transaksi masuk bulan ini"
+          className="block rounded-[14px] transition-colors duration-150 ease-out hover:bg-muted/40"
+        >
+          <Panel className="h-full p-4">
+            <p className="text-[13px] text-muted-foreground">Masuk</p>
+            <MaskedAmount className="mt-1 block text-[18px] font-semibold text-primary">
+              +{formatRupiah(totals.income)}
+            </MaskedAmount>
+            {incomeDeltaPct !== null && Math.abs(Math.round(incomeDeltaPct)) !== 0 ? (
+              <p
+                className={cn(
+                  "num mt-1 text-[12px] font-semibold",
+                  incomeDeltaPct >= 0 ? "text-primary" : "text-destructive",
+                )}
+              >
+                {incomeDeltaPct >= 0 ? "+" : "−"}
+                {Math.abs(Math.round(incomeDeltaPct))}% vs bln lalu
+              </p>
+            ) : null}
+          </Panel>
+        </Link>
+        <Link
+          href="/transactions?type=expense"
+          aria-label="Lihat transaksi keluar bulan ini"
+          className="block rounded-[14px] transition-colors duration-150 ease-out hover:bg-muted/40"
+        >
+          <Panel className="h-full p-4">
+            <p className="text-[13px] text-muted-foreground">Keluar</p>
+            <MaskedAmount className="mt-1 block text-[18px] font-semibold text-foreground">
+              −{formatRupiah(totals.expense)}
+            </MaskedAmount>
+            {expenseDeltaPct !== null && Math.abs(Math.round(expenseDeltaPct)) !== 0 ? (
+              <p
+                className={cn(
+                  "num mt-1 text-[12px] font-semibold",
+                  expenseDeltaPct <= 0 ? "text-primary" : "text-destructive",
+                )}
+              >
+                {expenseDeltaPct >= 0 ? "+" : "−"}
+                {Math.abs(Math.round(expenseDeltaPct))}% vs bln lalu
+              </p>
+            ) : null}
+          </Panel>
+        </Link>
       </div>
+
+      {totals.expense > 0 ? (
+        <section>
+          <SectionHeader title="Pengeluaran bulan ini" />
+          <Panel>
+            <CategoryDonut compact data={spendingSlices} total={totals.expense} />
+          </Panel>
+        </section>
+      ) : null}
 
       <section>
         <SectionHeader
@@ -190,9 +236,9 @@ export default async function DashboardPage({
                   <span className="font-medium text-foreground">
                     {item.category?.name ?? "Tanpa kategori"}
                   </span>
-                  <span className="num text-muted-foreground">
+                  <MaskedAmount className="text-muted-foreground">
                     {formatRupiah(item.spent)}
-                  </span>
+                  </MaskedAmount>
                 </div>
                 <BudgetBar percent={item.percent} state={item.state} />
               </div>

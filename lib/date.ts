@@ -65,6 +65,15 @@ export function monthRange(month: string): { start: string; end: string } {
   return { start, end };
 }
 
+/** "Jumat, 14 November" — tanggal hari ini untuk header dashboard (design.md §6). */
+export function formatIndonesianLongDate(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat("id-ID", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  }).format(date);
+}
+
 export function formatDateKey(dateKey: string): string {
   const [y, m, d] = dateKey.split("-").map(Number);
   return `${d} ${MONTHS_SHORT_ID[m - 1]} ${y}`;

@@ -2,15 +2,16 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Loader2, Sparkles } from "lucide-react";
+import { Camera, Calendar, Loader2, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
+import { DatePickerSheet } from "@/components/ui/date-picker-sheet";
 import { Panel } from "@/components/ui/panel";
 import { useToast } from "@/components/ui/toast";
 import { createTransactionAction } from "@/app/actions/transactions";
 import { parseQuickEntry } from "@/lib/ai/parse-text";
 import { formatRupiah, parseAmountInput } from "@/lib/money";
-import { todayKey } from "@/lib/date";
+import { formatDateKey, todayKey } from "@/lib/date";
 import type { Category, Wallet } from "@/lib/types";
 
 type Step = "input" | "review";
@@ -37,6 +38,7 @@ export function ScanFlow({ wallets, categories }: { wallets: Wallet[]; categorie
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const categoriesForType = categories.filter((item) => item.type === draft?.type);
@@ -141,6 +143,7 @@ export function ScanFlow({ wallets, categories }: { wallets: Wallet[]; categorie
 
   if (step === "review" && draft) {
     return (
+      <>
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <Button variant="secondary" size="sm" className="w-auto" onClick={() => setStep("input")}>
@@ -210,13 +213,16 @@ export function ScanFlow({ wallets, categories }: { wallets: Wallet[]; categorie
 
           <div className="grid grid-cols-2 gap-3">
             <Field label="Tanggal" htmlFor="draft-date">
-              <Input
+              <button
                 id="draft-date"
-                type="date"
-                value={draft.occurredAt}
-                max={todayKey()}
-                onChange={(event) => setDraft({ ...draft, occurredAt: event.target.value })}
-              />
+                type="button"
+                aria-haspopup="dialog"
+                onClick={() => setDatePickerOpen(true)}
+                className="flex h-12 w-full items-center gap-2 rounded-[10px] border border-input bg-card px-3.5 text-left text-[16px] text-foreground transition-colors duration-150 ease-out hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Calendar className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+                <span className="num">{formatDateKey(draft.occurredAt)}</span>
+              </button>
             </Field>
             <Field label="Dompet" htmlFor="draft-wallet">
               <Select
@@ -277,6 +283,14 @@ export function ScanFlow({ wallets, categories }: { wallets: Wallet[]; categorie
           </Button>
         </Panel>
       </div>
+      <DatePickerSheet
+        open={datePickerOpen}
+        onClose={() => setDatePickerOpen(false)}
+        value={draft.occurredAt}
+        onChange={(occurredAt) => setDraft({ ...draft, occurredAt })}
+        max={todayKey()}
+      />
+      </>
     );
   }
 

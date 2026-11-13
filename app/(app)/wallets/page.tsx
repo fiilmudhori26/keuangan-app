@@ -17,7 +17,7 @@ export default async function WalletsPage() {
       <header>
         <h1 className="text-[24px] font-bold leading-[30px] tracking-display text-foreground">Dompet</h1>
         <p className="text-[13px] text-muted-foreground">
-          Total saldo {formatRupiah(totalBalance(wallets))}
+          Total saldo <span className="num">{formatRupiah(totalBalance(wallets))}</span>
         </p>
       </header>
       <WalletManager wallets={wallets} categories={categories} />

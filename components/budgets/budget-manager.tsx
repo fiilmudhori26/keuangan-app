@@ -112,7 +112,7 @@ export function BudgetManager({
                     {item.category?.name ?? "Tanpa kategori"}
                   </p>
                   <p className="text-[13px] text-muted-foreground">
-                    Sisa {formatRupiah(Math.max(0, item.remaining))}
+                    Sisa <span className="num">{formatRupiah(Math.max(0, item.remaining))}</span>
                   </p>
                 </div>
                 <div className="flex gap-1">
@@ -141,12 +141,13 @@ export function BudgetManager({
               />
               {item.state === "over" ? (
                 <p className="mt-1 text-[13px] text-destructive">
-                  Anggaran {item.category?.name} terlampaui {formatRupiah(Math.abs(item.remaining))}.
+                  Anggaran {item.category?.name} terlampaui{" "}
+                  <span className="num">{formatRupiah(Math.abs(item.remaining))}</span>.
                 </p>
               ) : item.state === "warning" ? (
                 <p className="mt-1 text-[13px] text-warn-text">
                   Anggaran {item.category?.name} terpakai {Math.round(item.percent)}%. Sisa{" "}
-                  {formatRupiah(Math.max(0, item.remaining))}.
+                  <span className="num">{formatRupiah(Math.max(0, item.remaining))}</span>.
                 </p>
               ) : null}
             </Panel>

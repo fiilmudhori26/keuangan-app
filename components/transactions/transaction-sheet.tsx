@@ -2,19 +2,27 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Camera, Check, Delete } from "lucide-react";
+import { Camera, Check, Delete, Calendar } from "lucide-react";
 import { Sheet } from "@/components/ui/sheet";
+import { DatePickerSheet } from "@/components/ui/date-picker-sheet";
 import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { createTransactionAction, createTransferAction, updateTransactionAction } from "@/app/actions/transactions";
 import { enqueue, isOnline } from "@/lib/offline-queue";
-import { formatRupiah, parseAmountInput } from "@/lib/money";
-import { todayKey } from "@/lib/date";
+import { formatRupiah, parseAmountInput, MAX_AMOUNT } from "@/lib/money";
+import { formatDateKey, todayKey } from "@/lib/date";
 import { cn } from "@/lib/utils";
 import type { Category, Transaction, Wallet } from "@/lib/types";
 
 type Mode = "expense" | "income" | "transfer";
+
+const QUICK_CHIPS = [
+  { delta: 10_000, label: "+10 rb" },
+  { delta: 25_000, label: "+25 rb" },
+  { delta: 50_000, label: "+50 rb" },
+  { delta: 100_000, label: "+100 rb" },
+] as const;
 
 export function TransactionSheet({
   open,
@@ -41,6 +49,7 @@ export function TransactionSheet({
   const [walletId, setWalletId] = useState("");
   const [toWalletId, setToWalletId] = useState("");
   const [occurredAt, setOccurredAt] = useState(todayKey());
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -75,6 +84,11 @@ export function TransactionSheet({
   }, [filteredCategories, categoryId, open, initial]);
 
   const amount = parseAmountInput(digits);
+
+  function addQuick(delta: number) {
+    setError(null);
+    setDigits(String(Math.min(amount + delta, MAX_AMOUNT)));
+  }
 
   function press(key: string) {
     setError(null);
@@ -166,6 +180,7 @@ export function TransactionSheet({
   ];
 
   return (
+    <>
     <Sheet
       open={open}
       onClose={onClose}
@@ -210,6 +225,20 @@ export function TransactionSheet({
         >
           {formatRupiah(amount)}
         </p>
+      </div>
+
+      <div role="group" aria-label="Tambah cepat nominal" className="mt-3 grid grid-cols-4 gap-2">
+        {QUICK_CHIPS.map((chip) => (
+          <button
+            key={chip.delta}
+            type="button"
+            onClick={() => addQuick(chip.delta)}
+            aria-label={`Tambah Rp ${chip.delta.toLocaleString("id-ID")} ke nominal`}
+            className="num h-11 rounded-btn border border-border text-[13px] font-medium text-foreground transition-colors duration-150 ease-out hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            {chip.label}
+          </button>
+        ))}
       </div>
 
       <div className="mt-3 grid grid-cols-3 gap-2">
@@ -292,13 +321,16 @@ export function TransactionSheet({
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Tanggal" htmlFor="occurred-at">
-            <Input
+            <button
               id="occurred-at"
-              type="date"
-              value={occurredAt}
-              max={todayKey()}
-              onChange={(event) => setOccurredAt(event.target.value)}
-            />
+              type="button"
+              aria-haspopup="dialog"
+              onClick={() => setDatePickerOpen(true)}
+              className="flex h-12 w-full items-center gap-2 rounded-[10px] border border-input bg-card px-3.5 text-left text-[16px] text-foreground transition-colors duration-150 ease-out hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Calendar className="size-5 shrink-0 text-muted-foreground" aria-hidden />
+              <span className="num">{formatDateKey(occurredAt)}</span>
+            </button>
           </Field>
           <Field label="Catatan" htmlFor="note">
             <Input
@@ -327,6 +359,14 @@ export function TransactionSheet({
         ) : null}
       </div>
     </Sheet>
+    <DatePickerSheet
+      open={datePickerOpen}
+      onClose={() => setDatePickerOpen(false)}
+      value={occurredAt}
+      onChange={setOccurredAt}
+      max={todayKey()}
+    />
+    </>
   );
 }
 

@@ -22,12 +22,73 @@ export const CHART_COLORS = [
   "#E0622D",
 ];
 
-export type CategorySlice = { name: string; value: number; color?: string };
+export type CategorySlice = { name: string; value: number; color?: string; categoryId?: string };
 
-export function CategoryDonut({ data, total }: { data: CategorySlice[]; total: number }) {
+export function CategoryDonut({
+  data,
+  total,
+  compact = false,
+}: {
+  data: CategorySlice[];
+  total: number;
+  /** Donut 96 px + legend 5 teratas (persen saja, tanpa nominal) untuk dashboard. */
+  compact?: boolean;
+}) {
   const slices = data.slice(0, 8);
   if (slices.length === 0) {
     return <p className="text-[13px] text-muted-foreground">Belum ada pengeluaran bulan ini.</p>;
+  }
+  if (compact) {
+    const top = slices.slice(0, 5);
+    return (
+      <div className="flex items-center gap-4">
+        <div className="relative size-24 shrink-0" aria-hidden>
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={slices}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={30}
+                outerRadius={46}
+                paddingAngle={2}
+                strokeWidth={0}
+              >
+                {slices.map((slice, index) => (
+                  <Cell
+                    key={slice.categoryId ?? index}
+                    fill={slice.color ?? CHART_COLORS[index % CHART_COLORS.length]}
+                  />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <ul className="min-w-0 flex-1 space-y-1">
+          {top.map((slice, index) => (
+            <li key={slice.categoryId ?? index} className="flex items-center justify-between gap-2 text-[13px]">
+              <span className="flex min-w-0 items-center gap-2">
+                <span
+                  aria-hidden
+                  className="size-2.5 shrink-0 rounded-full"
+                  style={{
+                    backgroundColor: slice.color ?? CHART_COLORS[index % CHART_COLORS.length],
+                  }}
+                />
+                <span className="truncate text-foreground">{slice.name}</span>
+              </span>
+              <span className="num shrink-0 text-muted-foreground">
+                {total > 0 ? Math.round((slice.value / total) * 100) : 0}%
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p className="sr-only">
+          Pengeluaran per kategori bulan ini:{" "}
+          {slices.map((s) => `${s.name} ${formatRupiah(s.value)}`).join(", ")}.
+        </p>
+      </div>
+    );
   }
   return (
     <div className="flex flex-col items-center gap-4 sm:flex-row">
@@ -44,7 +105,7 @@ export function CategoryDonut({ data, total }: { data: CategorySlice[]; total: n
               strokeWidth={0}
             >
               {slices.map((slice, index) => (
-                <Cell key={slice.name} fill={slice.color ?? CHART_COLORS[index % CHART_COLORS.length]} />
+                <Cell key={slice.categoryId ?? index} fill={slice.color ?? CHART_COLORS[index % CHART_COLORS.length]} />
               ))}
             </Pie>
             <Tooltip
@@ -53,7 +114,7 @@ export function CategoryDonut({ data, total }: { data: CategorySlice[]; total: n
                 const item = payload[0];
                 return (
                   <div className="rounded-[10px] border border-border bg-popover px-2 py-1 text-[12px] text-popover-foreground">
-                    {item.name} · {formatRupiah(Number(item.value))}
+                    {item.name} · <span className="num">{formatRupiah(Number(item.value))}</span>
                   </div>
                 );
               }}
@@ -67,7 +128,7 @@ export function CategoryDonut({ data, total }: { data: CategorySlice[]; total: n
       </div>
       <ul className="w-full space-y-1.5">
         {slices.map((slice, index) => (
-          <li key={slice.name} className="flex items-center justify-between gap-2 text-[13px]">
+          <li key={slice.categoryId ?? index} className="flex items-center justify-between gap-2 text-[13px]">
             <span className="flex min-w-0 items-center gap-2">
               <span
                 aria-hidden
@@ -120,8 +181,12 @@ export function MonthComparison({
                 return (
                   <div className="rounded-[10px] border border-border bg-popover px-2 py-1 text-[12px] text-popover-foreground">
                     <p className="font-semibold">{point.name}</p>
-                    <p>Bulan ini: {formatRupiah(point.current)}</p>
-                    <p>Bulan lalu: {formatRupiah(point.previous)}</p>
+                    <p>
+                      Bulan ini: <span className="num">{formatRupiah(point.current)}</span>
+                    </p>
+                    <p>
+                      Bulan lalu: <span className="num">{formatRupiah(point.previous)}</span>
+                    </p>
                   </div>
                 );
               }}
@@ -142,8 +207,8 @@ export function MonthComparison({
           {data.map((row) => (
             <tr key={row.name}>
               <td>{row.name}</td>
-              <td>{formatRupiah(row.current)}</td>
-              <td>{formatRupiah(row.previous)}</td>
+              <td className="num">{formatRupiah(row.current)}</td>
+              <td className="num">{formatRupiah(row.previous)}</td>
             </tr>
           ))}
         </tbody>

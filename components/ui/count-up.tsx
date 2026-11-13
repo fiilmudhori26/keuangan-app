@@ -57,5 +57,5 @@ export function CountUp({
     return () => cancelAnimationFrame(frame);
   }, [value, duration]);
 
-  return <span className={cn("block", className)}>{formatRupiah(display)}</span>;
+  return <span className={cn("block num", className)}>{formatRupiah(display)}</span>;
 }

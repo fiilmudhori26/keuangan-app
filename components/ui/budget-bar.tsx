@@ -1,6 +1,9 @@
+"use client";
+
 import { AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/lib/money";
+import { useHideBalance } from "@/components/ui/hide-balance";
 
 export function BudgetBar({
   percent,
@@ -17,6 +20,7 @@ export function BudgetBar({
 }) {
   const width = Math.min(100, Math.max(0, percent));
   const color = state === "over" ? "bg-destructive" : state === "warning" ? "bg-warn" : "bg-primary";
+  const [hiddenBalance] = useHideBalance();
 
   return (
     <div>
@@ -38,8 +42,13 @@ export function BudgetBar({
             {Math.round(percent)}%
           </span>
           {spent !== undefined && limit !== undefined ? (
-            <span className="num text-muted-foreground">
-              {formatRupiah(spent)} / {formatRupiah(limit)}
+            <span
+              className="num text-muted-foreground"
+              {...(hiddenBalance ? { role: "img", "aria-label": "Nominal disembunyikan" } : {})}
+            >
+              {hiddenBalance
+                ? "Rp ••••• / Rp •••••"
+                : `${formatRupiah(spent)} / ${formatRupiah(limit)}`}
             </span>
           ) : null}
         </div>
