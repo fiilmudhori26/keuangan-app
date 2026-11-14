@@ -3,7 +3,7 @@ import { requireDb } from "../db";
 import * as schema from "../db/schema";
 import { uid } from "../utils";
 import type { Repo, TransactionFilter } from "./types";
-import type { Budget, Category, Profile, Transaction, Wallet } from "../types";
+import type { Budget, Category, GoalContribution, Profile, SavingsGoal, Transaction, Wallet } from "../types";
 
 function iso(value: Date | string | null): string {
   if (!value) return new Date().toISOString();
@@ -15,6 +15,8 @@ type CategoryRow = typeof schema.categories.$inferSelect;
 type TransactionRow = typeof schema.transactions.$inferSelect;
 type BudgetRow = typeof schema.budgets.$inferSelect;
 type ProfileRow = typeof schema.profiles.$inferSelect;
+type SavingsGoalRow = typeof schema.savingsGoals.$inferSelect;
+type GoalContributionRow = typeof schema.goalContributions.$inferSelect;
 
 function mapWallet(row: WalletRow): Wallet {
   return {
@@ -82,6 +84,30 @@ function mapProfile(row: ProfileRow): Profile {
   };
 }
 
+function mapSavingsGoal(row: SavingsGoalRow): SavingsGoal {
+  return {
+    id: row.id,
+    userId: row.userId,
+    name: row.name,
+    targetAmount: row.targetAmount,
+    icon: row.icon,
+    color: row.color,
+    createdAt: iso(row.createdAt),
+  };
+}
+
+function mapGoalContribution(row: GoalContributionRow): GoalContribution {
+  return {
+    id: row.id,
+    userId: row.userId,
+    goalId: row.goalId,
+    amount: row.amount,
+    occurredAt: row.occurredAt,
+    note: row.note,
+    createdAt: iso(row.createdAt),
+  };
+}
+
 export const drizzleRepo: Repo = {
   async getProfile(userId) {
     const db = requireDb();
@@ -115,6 +141,8 @@ export const drizzleRepo: Repo = {
 
   async deleteUserData(userId) {
     const db = requireDb();
+    await db.delete(schema.goalContributions).where(eq(schema.goalContributions.userId, userId));
+    await db.delete(schema.savingsGoals).where(eq(schema.savingsGoals.userId, userId));
     await db.delete(schema.transactions).where(eq(schema.transactions.userId, userId));
     await db.delete(schema.budgets).where(eq(schema.budgets.userId, userId));
     await db.delete(schema.wallets).where(eq(schema.wallets.userId, userId));
@@ -320,5 +348,65 @@ export const drizzleRepo: Repo = {
       .where(and(eq(schema.budgets.userId, userId), eq(schema.budgets.id, id)))
       .returning({ id: schema.budgets.id });
     return rows.length > 0;
+  },
+
+  async listGoals(userId) {
+    const db = requireDb();
+    const rows = await db
+      .select()
+      .from(schema.savingsGoals)
+      .where(eq(schema.savingsGoals.userId, userId))
+      .orderBy(asc(schema.savingsGoals.createdAt));
+    return rows.map(mapSavingsGoal);
+  },
+
+  async listContributions(userId) {
+    const db = requireDb();
+    const rows = await db
+      .select()
+      .from(schema.goalContributions)
+      .where(eq(schema.goalContributions.userId, userId))
+      .orderBy(desc(schema.goalContributions.occurredAt), desc(schema.goalContributions.createdAt));
+    return rows.map(mapGoalContribution);
+  },
+
+  async createGoal(userId, input) {
+    const db = requireDb();
+    const [row] = await db
+      .insert(schema.savingsGoals)
+      .values({ ...input, id: uid("goal"), userId })
+      .returning();
+    return mapSavingsGoal(row);
+  },
+
+  async deleteGoal(userId, id) {
+    const db = requireDb();
+    // contributions ikut terhapus via ON DELETE CASCADE
+    const rows = await db
+      .delete(schema.savingsGoals)
+      .where(and(eq(schema.savingsGoals.userId, userId), eq(schema.savingsGoals.id, id)))
+      .returning({ id: schema.savingsGoals.id });
+    return rows.length > 0;
+  },
+
+  async addContribution(userId, input) {
+    const db = requireDb();
+    const [goal] = await db
+      .select({ id: schema.savingsGoals.id })
+      .from(schema.savingsGoals)
+      .where(and(eq(schema.savingsGoals.userId, userId), eq(schema.savingsGoals.id, input.goalId)));
+    if (!goal) return null;
+    const [row] = await db
+      .insert(schema.goalContributions)
+      .values({
+        id: uid("contrib"),
+        userId,
+        goalId: goal.id,
+        amount: input.amount,
+        occurredAt: input.occurredAt,
+        note: input.note ?? null,
+      })
+      .returning();
+    return mapGoalContribution(row);
   },
 };

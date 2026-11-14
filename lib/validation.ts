@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { MAX_AMOUNT } from "./money";
+import { toDateKey, todayKey } from "./date";
+import { GOAL_ICONS } from "./types";
 
 const amount = z
   .number({ error: "Nominal belum diisi." })
@@ -9,7 +11,11 @@ const amount = z
 
 const dateKey = z
   .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Tanggal tidak valid.");
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Tanggal tidak valid.")
+  .refine((value) => {
+    const parsed = new Date(`${value}T00:00:00`);
+    return !Number.isNaN(parsed.getTime()) && toDateKey(parsed) === value;
+  }, "Tanggal tidak valid.");
 
 const monthKeySchema = z
   .string()
@@ -65,6 +71,33 @@ export const budgetSchema = z.object({
   limitAmount: amount,
 });
 export type BudgetFormInput = z.infer<typeof budgetSchema>;
+
+export const goalSchema = z.object({
+  name: z.string().trim().min(1, "Nama target wajib diisi.").max(60, "Nama target maksimal 60 karakter."),
+  targetAmount: z
+    .number({ error: "Target belum diisi." })
+    .int("Target harus bilangan bulat.")
+    .positive("Target harus lebih dari 0.")
+    .max(MAX_AMOUNT, "Target terlalu besar."),
+  icon: z.enum(GOAL_ICONS, { error: "Ikon tidak tersedia." }),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Warna harus hex #RRGGBB."),
+});
+export type GoalInput = z.infer<typeof goalSchema>;
+
+export const contributionSchema = z.object({
+  goalId: z.string().min(1, "Target tidak dipilih."),
+  amount: z
+    .number({ error: "Nominal belum diisi." })
+    .int("Nominal harus bilangan bulat.")
+    .refine((value) => value !== 0, "Nominal tidak boleh 0.")
+    .refine((value) => Math.abs(value) <= MAX_AMOUNT, "Nominal terlalu besar."),
+  occurredAt: dateKey.refine(
+    (value) => value <= todayKey(),
+    "Tanggal tidak boleh setelah hari ini.",
+  ),
+  note: z.string().trim().max(200, "Catatan maksimal 200 karakter.").optional().or(z.literal("").transform(() => undefined)),
+});
+export type ContributionInput = z.infer<typeof contributionSchema>;
 
 export const profileSchema = z.object({
   displayName: z.string().trim().max(60).optional(),

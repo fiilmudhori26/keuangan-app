@@ -17,6 +17,9 @@ export const metadata: Metadata = {
     "PWA pencatatan pemasukan dan pengeluaran pribadi: multi dompet, anggaran bulanan, laporan, dan scan struk.",
   applicationName: "Keuangan",
   manifest: "/manifest.webmanifest",
+  // Splash PWA bersifat otomatis dari OS (Android/Chrome dari background_color
+  // manifest + ikon; iOS dari warna latar + apple-touch-icon). Tidak ada splash
+  // screen kustom dan tidak perlu apple-touch-startup-image — lihat design.md §10.
   appleWebApp: { capable: true, statusBarStyle: "default", title: "Keuangan" },
   icons: {
     icon: [

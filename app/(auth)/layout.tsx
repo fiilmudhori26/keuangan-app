@@ -10,7 +10,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col justify-center gap-6 px-4 py-10">
       <div className="flex flex-col items-center gap-2 text-center">
-        <Logo size={72} showWordmark={false} />
+        <Logo size={72} showWordmark={false} animate />
         <h1 className="mt-2 text-[24px] font-bold leading-[30px] tracking-display text-foreground">
           Keuangan
         </h1>

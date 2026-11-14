@@ -1,7 +1,9 @@
 import type {
   Budget,
   Category,
+  GoalContribution,
   Profile,
+  SavingsGoal,
   Transaction,
   TransactionType,
   Wallet,
@@ -10,6 +12,10 @@ import type {
 export type NewWallet = Omit<Wallet, "id" | "userId" | "createdAt">;
 export type NewCategory = Omit<Category, "id" | "userId">;
 export type NewTransaction = Omit<Transaction, "id" | "userId" | "createdAt" | "updatedAt">;
+export type NewGoal = Omit<SavingsGoal, "id" | "userId" | "createdAt">;
+export type NewContribution = Omit<GoalContribution, "id" | "userId" | "createdAt" | "note"> & {
+  note?: string | null;
+};
 
 export type TransactionFilter = {
   from?: string;
@@ -59,4 +65,11 @@ export type Repo = {
   listBudgets(userId: string, month: string): Promise<Budget[]>;
   upsertBudget(userId: string, input: BudgetInput): Promise<Budget>;
   deleteBudget(userId: string, id: string): Promise<boolean>;
+
+  listGoals(userId: string): Promise<SavingsGoal[]>;
+  listContributions(userId: string): Promise<GoalContribution[]>;
+  createGoal(userId: string, input: NewGoal): Promise<SavingsGoal>;
+  deleteGoal(userId: string, id: string): Promise<boolean>;
+  /** Mengembalikan null bila goal tidak ada / bukan milik user. */
+  addContribution(userId: string, input: NewContribution): Promise<GoalContribution | null>;
 };

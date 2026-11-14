@@ -12,6 +12,7 @@ import {
   totalBalance,
   withBalances,
 } from "@/lib/services/finance";
+import { goalProgress } from "@/lib/services/goals";
 import { monthRange, isValidMonthKey, shiftMonth, formatIndonesianLongDate } from "@/lib/date";
 import { formatRupiah, formatCompact } from "@/lib/money";
 import { MonthSwitcher } from "@/components/month-switcher";
@@ -23,6 +24,7 @@ import { TransactionList } from "@/components/transactions/transaction-list";
 import { TrendChart } from "@/components/charts/trend-chart";
 import { CategoryDonut } from "@/components/charts/category-charts";
 import { BudgetBar } from "@/components/ui/budget-bar";
+import { GoalIconBadge } from "@/components/goals/goal-icon";
 import { CountUp } from "@/components/ui/count-up";
 import { Panel, SectionHeader } from "@/components/ui/panel";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -38,7 +40,7 @@ export default async function DashboardPage({
   const month =
     params.month && isValidMonthKey(params.month) ? params.month : currentMonth();
 
-  const [profile, wallets, categories, allTransactions, monthTransactions, budgets, prevTransactions] =
+  const [profile, wallets, categories, allTransactions, monthTransactions, budgets, prevTransactions, goals, contributions] =
     await Promise.all([
       getOrCreateProfile(user.id, user.name),
       repo.listWallets(user.id),
@@ -47,6 +49,8 @@ export default async function DashboardPage({
       repo.listTransactions(user.id, { ...monthRange(month), limit: 1000 }),
       repo.listBudgets(user.id, month),
       repo.listTransactions(user.id, { ...monthRange(shiftMonth(month, -1)), limit: 1000 }),
+      repo.listGoals(user.id),
+      repo.listContributions(user.id),
     ]);
 
   const walletBalances = withBalances(wallets, allTransactions);
@@ -75,13 +79,25 @@ export default async function DashboardPage({
   const deltaPositive = delta >= 0;
   const displayName = (profile.displayName || user.name).trim();
   const initial = ([...displayName][0] ?? "?").toUpperCase();
-  const incomeDeltaPct =
-    prevTotals.income > 0 ? ((totals.income - prevTotals.income) / prevTotals.income) * 100 : null;
-  const expenseDeltaPct =
-    prevTotals.expense > 0
-      ? ((totals.expense - prevTotals.expense) / prevTotals.expense) * 100
-      : null;
   const todayLabel = formatIndonesianLongDate();
+  const cashflowTotal = totals.income + totals.expense;
+  const incomeShare = cashflowTotal > 0 ? (totals.income / cashflowTotal) * 100 : 50;
+  const incomeWidth = Math.min(66, Math.max(34, incomeShare));
+  const expenseWidth = 100 - incomeWidth;
+  const incomeSharePct = cashflowTotal > 0 ? Math.round((totals.income / cashflowTotal) * 100) : 0;
+  const expenseSharePct = cashflowTotal > 0 ? 100 - incomeSharePct : 0;
+  const net = totals.net;
+  // Kartu mini "Target tabungan": goal aktif dengan progres tertinggi (<100%);
+  // bila semua tercapai, tampilkan yang terakhir dibuat.
+  const goalItems = goals.map((goal) => ({ goal, ...goalProgress(goal, contributions) }));
+  const activeGoals = goalItems.filter((item) => item.percent < 100);
+  const topGoal =
+    activeGoals.length > 0
+      ? activeGoals.reduce((best, item) => (item.percent > best.percent ? item : best))
+      : goalItems.length > 0
+        ? goalItems[goalItems.length - 1]
+        : null;
+  const topGoalReached = topGoal?.state === "reached";
 
   return (
     <div className="animate-fade-up-fast space-y-6">
@@ -100,8 +116,11 @@ export default async function DashboardPage({
             {initial}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-[13px] text-muted-foreground">Halo, {displayName}</p>
-            <p className="text-[12px] leading-4 text-muted-foreground">{todayLabel}</p>
+            <p className="text-[13px] font-semibold leading-[18px] text-primary">Keuangan</p>
+            <h1 className="truncate text-[18px] font-semibold leading-6 text-foreground">
+              Halo, {displayName}
+            </h1>
+            <p className="text-[13px] font-medium leading-[18px] text-muted-foreground">{todayLabel}</p>
             <MonthSwitcher month={month} basePath="/dashboard" />
           </div>
         </div>
@@ -123,14 +142,21 @@ export default async function DashboardPage({
         hasTransaction={allTransactions.length > 0}
       />
 
-      <Panel className="rounded-[20px] border-border bg-surface-raised p-6">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-[13px] font-medium text-muted-foreground">Saldo total</p>
+      <Panel className="relative rounded-[20px] border-transparent bg-primary p-6 text-primary-foreground">
+        <span
+          aria-hidden
+          className="hero-scrim absolute right-6 top-6 flex size-16 items-center justify-center rounded-full text-[24px] font-bold leading-none text-primary-foreground"
+        >
+          {initial}
+        </span>
+        <div className="flex items-center justify-between gap-3 pr-20">
+          <p className="text-[13px] font-medium leading-[18px] text-primary-foreground">
+            Saldo total
+          </p>
           <span
             role="img"
             className={cn(
-              "inline-flex items-center gap-1 rounded-[10px] px-2 py-1 text-[14px] leading-[20px] font-semibold",
-              deltaPositive ? "bg-secondary text-primary" : "bg-expense-soft text-expense-text",
+              "hero-scrim inline-flex items-center gap-1 rounded-[10px] px-2 py-1 text-[14px] leading-[20px] font-semibold text-primary-foreground",
             )}
             aria-label={`Selisih bulan ini dibanding bulan lalu: ${deltaPositive ? "plus" : "minus"} ${formatCompact(Math.abs(delta))}`}
           >
@@ -145,63 +171,110 @@ export default async function DashboardPage({
             </span>
           </span>
         </div>
-        <MaskedAmount className="mt-1 block text-[44px] font-bold leading-[48px] tracking-display text-foreground">
+        <MaskedAmount className="mt-1 block text-[44px] font-bold leading-[48px] tracking-display text-primary-foreground">
           <CountUp
             value={totalBalance(walletBalances)}
-            className="num text-foreground"
+            className="num text-primary-foreground"
           />
         </MaskedAmount>
-        <TrendChart data={trend} />
+        <TrendChart data={trend} onBrand />
       </Panel>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Link
-          href="/transactions?type=income"
-          aria-label="Lihat transaksi masuk bulan ini"
-          className="block rounded-[14px] transition-colors duration-150 ease-out hover:bg-muted/40"
-        >
-          <Panel className="h-full p-4">
-            <p className="text-[13px] text-muted-foreground">Masuk</p>
-            <MaskedAmount className="mt-1 block text-[18px] font-semibold text-primary">
-              +{formatRupiah(totals.income)}
+      <Panel className="rounded-hero p-4">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-[13px] font-medium text-muted-foreground">Cash flow bulan ini</p>
+          <MaskedAmount
+            className={cn(
+              "num text-[13px] font-semibold",
+              net >= 0 ? "text-primary" : "text-destructive",
+            )}
+          >
+            {net >= 0 ? "+" : "−"}
+            {formatCompact(Math.abs(net))}
+          </MaskedAmount>
+        </div>
+        <div className="mt-3 flex h-16 w-full gap-[2px] overflow-hidden rounded-[10px]">
+          <Link
+            href="/transactions?type=income"
+            aria-label="Masuk — lihat transaksi pemasukan"
+            className="animate-bar flex min-w-0 flex-col justify-center gap-0.5 bg-primary px-3 text-primary-foreground transition-[width] duration-[420ms] ease-out focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-foreground"
+            style={{ width: `${incomeWidth}%`, animationDuration: "420ms" }}
+          >
+            <span className="flex items-baseline justify-between gap-2 text-[12px] font-medium leading-4 text-primary-foreground">
+              Masuk
+              <span className="num">{incomeSharePct}%</span>
+            </span>
+            <MaskedAmount className="block truncate text-[13px] font-semibold leading-[18px] text-primary-foreground">
+              {formatRupiah(totals.income)}
             </MaskedAmount>
-            {incomeDeltaPct !== null && Math.abs(Math.round(incomeDeltaPct)) !== 0 ? (
-              <p
-                className={cn(
-                  "num mt-1 text-[12px] font-semibold",
-                  incomeDeltaPct >= 0 ? "text-primary" : "text-destructive",
-                )}
-              >
-                {incomeDeltaPct >= 0 ? "+" : "−"}
-                {Math.abs(Math.round(incomeDeltaPct))}% vs bln lalu
-              </p>
-            ) : null}
-          </Panel>
-        </Link>
-        <Link
-          href="/transactions?type=expense"
-          aria-label="Lihat transaksi keluar bulan ini"
-          className="block rounded-[14px] transition-colors duration-150 ease-out hover:bg-muted/40"
-        >
-          <Panel className="h-full p-4">
-            <p className="text-[13px] text-muted-foreground">Keluar</p>
-            <MaskedAmount className="mt-1 block text-[18px] font-semibold text-foreground">
-              −{formatRupiah(totals.expense)}
+          </Link>
+          <Link
+            href="/transactions?type=expense"
+            aria-label="Keluar — lihat transaksi pengeluaran"
+            className="animate-bar flex min-w-0 flex-col justify-center gap-0.5 bg-destructive px-3 text-primary-foreground transition-[width] duration-[420ms] ease-out focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-foreground"
+            style={{ width: `${expenseWidth}%`, animationDuration: "420ms" }}
+          >
+            <span className="flex items-baseline justify-between gap-2 text-[12px] font-medium leading-4 text-primary-foreground">
+              Keluar
+              <span className="num">{expenseSharePct}%</span>
+            </span>
+            <MaskedAmount className="block truncate text-[13px] font-semibold leading-[18px] text-primary-foreground">
+              {formatRupiah(totals.expense)}
             </MaskedAmount>
-            {expenseDeltaPct !== null && Math.abs(Math.round(expenseDeltaPct)) !== 0 ? (
-              <p
-                className={cn(
-                  "num mt-1 text-[12px] font-semibold",
-                  expenseDeltaPct <= 0 ? "text-primary" : "text-destructive",
-                )}
-              >
-                {expenseDeltaPct >= 0 ? "+" : "−"}
-                {Math.abs(Math.round(expenseDeltaPct))}% vs bln lalu
+          </Link>
+        </div>
+      </Panel>
+
+      {topGoal ? (
+        <section>
+          <SectionHeader
+            title="Target tabungan"
+            action={
+              <Link href="/goals" className="flex h-11 items-center text-[14px] font-semibold text-primary">
+                Lihat
+              </Link>
+            }
+          />
+          <Panel className="flex items-center gap-3 p-4">
+            <GoalIconBadge icon={topGoal.goal.icon} color={topGoal.goal.color} size={40} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[15px] font-semibold leading-5 text-foreground">
+                {topGoal.goal.name}
               </p>
-            ) : null}
+              <div
+                className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-border"
+                role="img"
+                aria-label={`Progres target tabungan ${topGoal.goal.name}: ${Math.round(topGoal.percent)}%`}
+              >
+                <div
+                  className={cn(
+                    "animate-bar h-full rounded-full transition-[width] duration-[var(--motion-base)] ease-out",
+                    topGoalReached ? "bg-gold" : "bg-primary",
+                  )}
+                  style={{ width: `${Math.min(100, Math.max(0, topGoal.percent))}%` }}
+                />
+              </div>
+              <p className="mt-1.5 text-[13px] leading-[18px] text-muted-foreground">
+                {topGoalReached ? (
+                  <span className="font-medium text-gold-text">Tercapai</span>
+                ) : (
+                  <>
+                    Sisa{" "}
+                    <MaskedAmount className="num font-medium text-foreground">
+                      {formatRupiah(Math.max(0, topGoal.goal.targetAmount - topGoal.saved))}
+                    </MaskedAmount>
+                  </>
+                )}{" "}
+                dari target{" "}
+                <MaskedAmount className="num">
+                  {formatRupiah(topGoal.goal.targetAmount)}
+                </MaskedAmount>{" "}
+                · <span className="num font-medium text-foreground">{Math.round(topGoal.percent)}%</span>
+              </p>
+            </div>
           </Panel>
-        </Link>
-      </div>
+        </section>
+      ) : null}
 
       {totals.expense > 0 ? (
         <section>

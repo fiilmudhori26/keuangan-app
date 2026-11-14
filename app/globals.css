@@ -24,6 +24,10 @@
   --warn: #b7791f;
   --warn-text: #8f5a0a;
   --warn-soft: #fbf0d9;
+  /* Gold: HANYA untuk milestone "tercapai" target tabungan (design.md §6, §10) */
+  --gold: #d4af37;
+  --gold-soft: #fbf6e3;
+  --gold-text: #8a6a10;
   --expense-soft: #fbe7e5;
   --expense-text: #b33226;
   --surface-raised: #ffffff;
@@ -38,6 +42,8 @@
   /* Harus sama dengan DEFAULT_DURATION di components/ui/count-up.tsx */
   --motion-count: 700ms;
   --motion-bar: 420ms;
+  /* Stroke-draw logo (design.md §6, §9) */
+  --motion-logo: 600ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   /* Harus sama dengan STAGGER_STEP di components/transactions/transaction-list.tsx */
@@ -66,6 +72,10 @@
   --warn: #e0a93b;
   --warn-text: #f0c66b;
   --warn-soft: #33280f;
+  /* Gold: HANYA untuk milestone "tercapai" target tabungan (design.md §6, §10) */
+  --gold: #f0c85e;
+  --gold-soft: #33290f;
+  --gold-text: #f5dc8a;
   --expense-soft: #3a1b19;
   --expense-text: #f0716a;
   --surface-raised: #1b2520;
@@ -94,6 +104,9 @@
   --color-warn: var(--warn);
   --color-warn-text: var(--warn-text);
   --color-warn-soft: var(--warn-soft);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+  --color-gold-text: var(--gold-text);
   --color-expense-soft: var(--expense-soft);
   --color-expense-text: var(--expense-text);
   --color-surface-raised: var(--surface-raised);
@@ -185,6 +198,40 @@
   }
 }
 
+/* Serbuk emas milestone "Tercapai" target tabungan (design.md §6, §9). */
+@keyframes confetti-fall {
+  from {
+    opacity: 1;
+    transform: translateY(-12vh) rotate(0deg);
+  }
+  to {
+    opacity: 0.9;
+    transform: translateY(108vh) rotate(var(--confetti-rotate, 540deg));
+  }
+}
+
+/* Stroke-draw mark "K" saat mount pertama (design.md §6 "Logo dan identitas", §9).
+   pathLength={1} pada <path> membuat dasharray/offset 1 = panjang penuh. */
+@keyframes stroke-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Latar transparan di atas panel saldo penuh (design.md §6 "Panel saldo").
+   Terang: tinta gelap 16% (on-brand putih 15% hanya ≈ 4,05:1 — gagal AA);
+   gelap: on-brand (#06130D) 15%. */
+.hero-scrim {
+  background-color: color-mix(in oklab, var(--foreground) 16%, transparent);
+}
+
+.dark .hero-scrim {
+  background-color: color-mix(in oklab, var(--primary-foreground) 15%, transparent);
+}
+
 @keyframes shimmer {
   from {
     transform: translateX(-100%);
@@ -225,6 +272,17 @@
 
 .animate-bar {
   animation: bar-fill var(--motion-bar) var(--ease-out) both;
+}
+
+.confetti-piece {
+  animation: confetti-fall 1.4s var(--ease-in-out) both;
+}
+
+/* Hanya dipakai lewat prop animate pada <Logo> (design.md §6, §9) */
+.animate-stroke-draw path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: stroke-draw var(--motion-logo) var(--ease-out) both;
 }
 
 /* Kerangka memuat: shimmer halus, aman untuk reduced-motion. */

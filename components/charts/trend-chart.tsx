@@ -4,9 +4,20 @@ import { Line, LineChart, ResponsiveContainer, Tooltip } from "recharts";
 import { formatCompact, formatRupiah } from "@/lib/money";
 import { formatDateKey } from "@/lib/date";
 
-export function TrendChart({ data }: { data: Array<{ date: string; value: number }> }) {
+export function TrendChart({
+  data,
+  onBrand = false,
+}: {
+  data: Array<{ date: string; value: number }>;
+  /** Warna garis & teks adaptif untuk di atas panel brand penuh (hero saldo). */
+  onBrand?: boolean;
+}) {
   if (data.length < 2) {
-    return <p className="text-[13px] text-muted-foreground">Grafik tren muncul setelah ada transaksi.</p>;
+    return (
+      <p className={onBrand ? "text-[13px] text-primary-foreground" : "text-[13px] text-muted-foreground"}>
+        Grafik tren muncul setelah ada transaksi.
+      </p>
+    );
   }
   const last = data[data.length - 1];
   return (
@@ -17,7 +28,7 @@ export function TrendChart({ data }: { data: Array<{ date: string; value: number
             <Line
               type="monotone"
               dataKey="value"
-              stroke="var(--primary)"
+              stroke={onBrand ? "var(--primary-foreground)" : "var(--primary)"}
               strokeWidth={2}
               dot={false}
               isAnimationActive

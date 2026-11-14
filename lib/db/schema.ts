@@ -142,6 +142,36 @@ export const transactions = pgTable(
   ],
 );
 
+export const savingsGoals = pgTable(
+  "savings_goals",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    name: text("name").notNull(),
+    targetAmount: integer("target_amount").notNull(),
+    icon: text("icon").notNull().default("Target"),
+    color: text("color").notNull().default("#0B7A4B"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("savings_goals_user_idx").on(table.userId)],
+);
+
+export const goalContributions = pgTable(
+  "goal_contributions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id").notNull(),
+    goalId: text("goal_id")
+      .notNull()
+      .references(() => savingsGoals.id, { onDelete: "cascade" }),
+    amount: integer("amount").notNull(),
+    occurredAt: date("occurred_at", { mode: "string" }).notNull(),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("goal_contributions_user_goal_idx").on(table.userId, table.goalId)],
+);
+
 export const budgets = pgTable(
   "budgets",
   {

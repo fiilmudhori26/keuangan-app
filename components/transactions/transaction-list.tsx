@@ -2,7 +2,8 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { MoreHorizontal, Pencil, ReceiptText, Trash2 } from "lucide-react";
+import { ArrowLeftRight, MoreHorizontal, Pencil, ReceiptText, Shapes, Trash2 } from "lucide-react";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Sheet } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -245,18 +246,24 @@ export function TransactionList({
                   onEdit={() => setEditing(transaction)}
                   onDelete={() => setDeleting(transaction)}
                 >
-                  <span
-                    aria-hidden
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full text-[13px] font-bold"
-                    style={{
-                      backgroundColor: category?.color
-                        ? `${category.color}22`
-                        : "color-mix(in oklab, var(--muted-foreground) 15%, transparent)",
-                      color: category?.color ?? "var(--muted-foreground)",
-                    }}
-                  >
-                    {(category?.name ?? (isTransfer ? "T" : "?")).slice(0, 1)}
-                  </span>
+                  {category && !isTransfer ? (
+                    <CategoryIcon category={category} size={40} />
+                  ) : (
+                    <span
+                      aria-hidden
+                      className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground"
+                      style={{
+                        backgroundColor:
+                          "color-mix(in oklab, var(--muted-foreground) 15%, transparent)",
+                      }}
+                    >
+                      {isTransfer ? (
+                        <ArrowLeftRight className="size-5" strokeWidth={1.5} fill="currentColor" aria-hidden />
+                      ) : (
+                        <Shapes className="size-5" strokeWidth={1.5} fill="currentColor" aria-hidden />
+                      )}
+                    </span>
+                  )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[16px] font-medium text-foreground">
                       {isTransfer

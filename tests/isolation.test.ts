@@ -85,6 +85,99 @@ describe("repository isolation", () => {
   });
 });
 
+describe("savings goals isolation", () => {
+  const alice = "user-alice";
+  const bob = "user-bob";
+
+  beforeEach(() => {
+    resetStoreForTests();
+  });
+
+  it("does not leak goals between users", async () => {
+    const goal = await repo.createGoal(alice, {
+      name: "Dana darurat Alice",
+      targetAmount: 10_000_000,
+      icon: "PiggyBank",
+      color: "#0B7A4B",
+    });
+
+    expect(await repo.listGoals(bob)).toHaveLength(0);
+    // Repo tidak mengekspos getContributions per goal; jalur "null" terdekat:
+    // Bob tidak bisa menyetor ke goal milik Alice.
+    expect(
+      await repo.addContribution(bob, {
+        goalId: goal.id,
+        amount: 100_000,
+        occurredAt: "2026-11-13",
+      }),
+    ).toBeNull();
+    expect(await repo.deleteGoal(bob, goal.id)).toBe(false);
+    await repo.deleteUserData(bob);
+    expect((await repo.listGoals(alice)).map((item) => item.id)).toContain(goal.id);
+  });
+
+  it("does not leak contributions between users", async () => {
+    const goal = await repo.createGoal(alice, {
+      name: "Dana liburan Alice",
+      targetAmount: 5_000_000,
+      icon: "Target",
+      color: "#0B7A4B",
+    });
+    await repo.addContribution(alice, {
+      goalId: goal.id,
+      amount: 500_000,
+      occurredAt: "2026-11-13",
+    });
+
+    expect(await repo.listContributions(bob)).toHaveLength(0);
+    expect(await repo.listContributions(alice)).toHaveLength(1);
+  });
+
+  it("deleting a goal also deletes its contributions", async () => {
+    const goal = await repo.createGoal(alice, {
+      name: "Dana pendidikan Alice",
+      targetAmount: 20_000_000,
+      icon: "GraduationCap",
+      color: "#0B7A4B",
+    });
+    await repo.addContribution(alice, {
+      goalId: goal.id,
+      amount: 1_000_000,
+      occurredAt: "2026-11-01",
+    });
+    await repo.addContribution(alice, {
+      goalId: goal.id,
+      amount: 250_000,
+      occurredAt: "2026-11-13",
+    });
+    expect(await repo.listContributions(alice)).toHaveLength(2);
+
+    expect(await repo.deleteGoal(alice, goal.id)).toBe(true);
+    expect(await repo.listGoals(alice)).toHaveLength(0);
+    expect(await repo.listContributions(alice)).toHaveLength(0);
+  });
+
+  it("scopes goal operations to the owner's userId", async () => {
+    const goal = await repo.createGoal(alice, {
+      name: "Rumah Alice",
+      targetAmount: 500_000_000,
+      icon: "Home",
+      color: "#0B7A4B",
+    });
+
+    // Bob knows the goal id but it is not his.
+    expect(await repo.deleteGoal(bob, goal.id)).toBe(false);
+    expect(await repo.listGoals(bob)).toHaveLength(0);
+    expect(await repo.addContribution(bob, {
+      goalId: goal.id,
+      amount: 100_000,
+      occurredAt: "2026-11-13",
+    })).toBeNull();
+    expect(await repo.listContributions(bob)).toHaveLength(0);
+    expect(await repo.listGoals(alice)).toHaveLength(1);
+  });
+});
+
 describe("transfers", () => {
   const user = "user-transfer";
 

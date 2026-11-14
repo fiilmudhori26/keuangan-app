@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronRight, Target, Tags, Wallet } from "lucide-react";
+import { ChevronRight, Target, Tags, Wallet, PiggyBank } from "lucide-react";
 import { requireUser } from "@/lib/session";
 import { repo } from "@/lib/data/repo.demo";
 import { isDemoMode } from "@/lib/db";
@@ -15,6 +15,7 @@ const MANAGEMENT_LINKS = [
   { href: "/wallets", label: "Dompet", icon: Wallet },
   { href: "#kategori", label: "Kategori", icon: Tags },
   { href: "/budgets", label: "Anggaran", icon: Target },
+  { href: "/goals", label: "Target tabungan", icon: PiggyBank },
 ];
 
 export default async function SettingsPage() {

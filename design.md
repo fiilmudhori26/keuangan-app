@@ -1,6 +1,6 @@
 # design.md: Sistem Desain Aplikasi Keuangan Pribadi
 
-Versi 0.2 · Pelengkap `docs/PRD.md` · Platform: PWA mobile-first · Stack UI: Next.js, Tailwind CSS, shadcn/ui
+Versi 0.3 · Pelengkap `docs/PRD.md` · Platform: PWA mobile-first · Stack UI: Next.js, Tailwind CSS, shadcn/ui
 
 Dokumen ini adalah satu-satunya sumber kebenaran untuk tampilan. OpenCode wajib memakai token di sini dan tidak boleh menambah warna, ukuran, atau radius di luar yang tercantum.
 
@@ -8,7 +8,7 @@ Dokumen ini adalah satu-satunya sumber kebenaran untuk tampilan. OpenCode wajib 
 
 ## 1. Arah Desain
 
-**Karakter:** modern fintech, tegas, berorientasi data. Angka adalah tokoh utama; antarmuka di sekelilingnya tenang dan disiplin.
+**Karakter (arah A — "premium tenang tapi mahal", Apple Card / Mercury):** tenang, disiplin, dan lapang; angka adalah tokoh utama yang dibungkus ruang napas lega dan permukaan penuh warna yang disengaja, bukan dekorasi. Panel saldo hero adalah bidang `brand` penuh dengan teks `on-brand` — satu-satunya panel berwarna penuh di aplikasi, seperti kartu fisik premium. Antarmuka sisanya tetap sunyi: garis tipis, tanpa bayangan, tanpa gradien.
 
 **Satu elemen yang diingat:** angka saldo total di dashboard, besar dan tegas, dengan garis tren bulan berjalan di bawahnya. Elemen lain sengaja dibuat sunyi agar angka ini menonjol. Di sampingnya, **mark "K"** (lihat §6 "Logo dan identitas") menjadi jangkar identitas aplikasi di seluruh titik sentuh: ikon PWA, favicon, dan layar masuk.
 
@@ -73,6 +73,7 @@ Semua warna dipakai lewat variabel CSS (bagian 10). Jangan menulis hex langsung 
 - Di tema gelap, kedalaman dibentuk oleh perbedaan nada permukaan, bukan bayangan.
 - `overlay` adalah peredup di belakang sheet/dialog: terang `color-mix(in oklab, #0E1A15 40%, transparent)`, gelap `color-mix(in oklab, #000000 60%, transparent)`. Jangan memakai warna hitam/putih transparan langsung.
 - Pasangan teks/latar harus memenuhi kontras WCAG AA (4,5:1 untuk teks biasa). `warn` tidak boleh dipakai sebagai warna teks.
+- `on-brand` di atas `brand` adalah satu-satunya pasangan teks/latar berwarna penuh yang dipakai (panel saldo hero dan slot navigasi aktif). Elemen transparan di atas panel hero memakai latar gelap/terang transparan yang menjaga AA — lihat §6 "Panel saldo".
 
 ### 2.3 Palet grafik kategori (8 warna)
 
@@ -159,17 +160,24 @@ Kategori di atas 8 digabung ke "Lainnya".
 
 ```
 ┌───────────────────────────────┐
-│ (A) November 2026 ▾      ◐ ⚙  │  header: avatar inisial, pilih bulan, tema, pengaturan
+│ Keuangan                 ◐ ⚙  │  wordmark brand 13px 600 di atas sapaan; ikon tema & pengaturan
+│ (A) Halo, Akbar          (+)  │  avatar inisial 36–40px, "Halo" title-2 18/24 600, tombol catat
+│ Jumat, 14 November ▾          │  tanggal caption muted + pemilih bulan di baris berikutnya
 │                               │
-│ Saldo total      [+Rp 1,2 jt] │  chip selisih (brand-soft / expense-soft) kanan atas
-│ Rp 12.450.000                 │  display-lg 44, ink
-│ ▁▂▃▃▄▅▅▆▆▇                    │  garis tren bulan berjalan
+│ Saldo total [+Rp 1,2 jt]  (A) │  PANEL BRAND PENUH: chip on-brand transparan, avatar 64px kanan atas
+│ Rp 12.450.000                 │  display-lg 44, on-brand
+│ ▁▂▃▃▄▅▅▆▆▇                    │  garis tren bulan berjalan, stroke on-brand
 │                               │
-│ ┌──────────┐ ┌──────────┐     │
-│ │ Masuk    │ │ Keluar   │     │  dua ringkasan bulan ini
-│ │ 5.200.000│ │ 3.980.000│     │  hijau / −, dengan delta persen vs bln lalu
-│ │ +12%     │ │ −8%      │     │  kecil, brand/destructive (arah menguntungkan/tidak)
-│ └──────────┘ └──────────┘     │
+│ Cash flow bulan ini   +Rp 1,2 jt│  label + selisih net (brand/destructive, compact)
+│ ┌──────────────────┬──────────┐│
+│ │ Masuk  57%       │ Kel 43%  ││  STRIP penuh lebar, dua segmen proporsional
+│ │ Rp 5.200.000     │ Rp 3,98jt││  min 34% per segmen; dua tautan terfilter
+│ └──────────────────┴──────────┘│
+│                               │
+│ Target tabungan           Lihat│  HANYA bila ada ≥1 goal; tautan ke /goals
+│ 🐷 Dana darurat     42%       │  goal progres tertinggi <100% (semua tercapai → terakhir)
+│ ████████░░░░░░░░░░░░          │  bar primary, ikon goal 40 px (gold hanya bila tercapai)
+│ Sisa Rp 5,8 jt dari target Rp 10 jt · 42%│
 │                               │
 │ Pengeluaran bulan ini          │  panel donut mini; hanya tampil bila ada pengeluaran
 │ ◉ Makan 34%   Belanja 18%      │  donut 96 px + legend 5 teratas, persen saja + label
@@ -236,33 +244,40 @@ Hasil AI selalu berstatus draf; kolom yang diisi AI diberi penanda ikon kecil da
 ## 6. Komponen
 
 ### Logo dan identitas
-Mark: huruf "K" putih tebal (bobot 700) di atas rounded-square `brand` (`#0B7A4B`), radius ±22% dari sisi. Wordmark: "Keuangan" memakai Inter Tight 700, tracking −0.02em, warna `ink`. Mark dipakai untuk favicon dan ikon PWA (192, 512, dan *maskable* dengan zona aman 80%; versi maskable dan apple-touch-icon penuh tanpa radius karena platform yang memberi masker). Komponen `components/brand/logo.tsx` (prop `size` dalam px, `showWordmark`) merender mark sebagai SVG inline; tidak ada aset raster yang dibundel ke komponen. Mark tidak diberi gradien, bayangan, atau warna lain, dan tidak dianimasikan.
+Mark: huruf "K" putih tebal (bobot 700) di atas rounded-square `brand` (`#0B7A4B`), radius ±22% dari sisi. Wordmark: "Keuangan" memakai Inter Tight 700, tracking −0.02em, warna `ink`. Mark dipakai untuk favicon dan ikon PWA (192, 512, dan *maskable* dengan zona aman 80%; versi maskable dan apple-touch-icon penuh tanpa radius karena platform yang memberi masker). Komponen `components/brand/logo.tsx` (prop `size` dalam px, `showWordmark`, `animate?: boolean`) merender mark sebagai SVG inline; tidak ada aset raster yang dibundel ke komponen. Mark tidak diberi gradien, bayangan, atau warna lain. Mark dianimasikan hanya lewat prop `animate` (lihat §9 "stroke-draw") — dipakai pada mark hero di layar masuk/daftar saja (72 px); tidak dipakai pada nav atau render berulang. Tanpa `animate`, mark tampil langsung jadi.
 
 ### Panel saldo (hero dashboard)
-Panel `surface-raised` dengan border `line`, radius 20, padding 24 px (`p-6`) — **bukan** panel `brand` penuh. Isi dari atas ke bawah:
-1. Baris label: "Saldo total" (`caption`/`micro` muted) di kiri; **chip selisih** di kanan atas: chip radius 10, teks `label` 14/20 600. Arah positif = latar `brand-soft` + teks `brand`; arah negatif = latar `expense-soft` + teks `expense-text`. Chip selalu menyertakan tanda `+`/`−` dan ikon panah kecil (mis. `+Rp 1,2 jt`), tidak mengandalkan warna saja; tanpa akhiran teks agar muat di layar 360 px — makna ("selisih bulan ini dibanding bulan lalu") dijelaskan lewat `role="img"` + `aria-label` pada chip.
-2. Angka saldo: `display-lg` 44/48, bobot 700, tracking −0.02em, tabular-nums, `ink`.
-3. Garis tren bulan berjalan di bawahnya (lihat "Grafik").
+Panel **penuh `brand`** (`primary`: terang `#0B7A4B`, gelap `#34C38A`), radius 20, padding 24 px (`p-6`), tanpa border (`border-transparent`). Seluruh teks dan ikon di dalam panel memakai `on-brand`, kecuali tooltip grafik yang memakai permukaan popover (terang `#FFFFFF`, gelap `#1B2520`) - kontras ≥ 4,5:1 di kedua tema (5,39:1 terang; 8,42:1 gelap). Panel ini satu-satunya bidang berwarna penuh di aplikasi; sisa antarmuka tetap sunyi. **Avatar inisial** melayang di pojok kanan atas panel: lingkaran 64 px (`size-16`) `absolute` (`top-6 right-6`), latar transparan di atas panel (kelas `.hero-scrim`, lihat di bawah), inisial pertama (bobot 700, 24 px, `on-brand`), `aria-hidden` (nama sudah terbaca dari sapaan di header). Baris label/chip diberi ruang `pr-20` agar tidak tumpang tindih dengan avatar pada 360 px; angka dan grafik memakai lebar penuh. Isi dari atas ke bawah:
+1. Baris label: "Saldo total" (`caption` 13/18, bobot 500, `on-brand` penuh) di kiri; **chip selisih** di kanan baris (sebelum ruang avatar): chip radius 10, teks `label` 14/20 600, latar transparan di atas panel — terang `#0E1A15` 16% (gelap transparan), gelap `on-brand` (`#06130D`) 15% (kelas `.hero-scrim`). Teks chip selalu `on-brand` penuh dengan tanda `+`/`−` dan ikon panah kecil (mis. `+Rp 1,2 jt`), tidak mengandalkan warna saja; tanpa akhiran teks agar muat di layar 360 px — makna ("selisih bulan ini dibanding bulan lalu") dijelaskan lewat `role="img"` + `aria-label` pada chip. *(Catatan AA: `on-brand` putih 15% di atas `#0B7A4B` hanya ≈ 4,05:1 untuk teks 14 px — di bawah ambang 4,5:1 — sehingga tema terang memakai tinta gelap 16% ≈ 5,5:1; arah warna chip (gelap transparan di atas panel) tetap sesuai maksud awal.)*
+2. Angka saldo: `display-lg` 44/48, bobot 700, tracking −0.02em, tabular-nums, `on-brand`.
+3. Garis tren bulan berjalan di bawahnya (lihat "Grafik"): stroke `on-brand` (bukan `brand`, agar terbaca di atas panel); teks keadaan kosong juga `on-brand` penuh.
 Angka hero lebih besar dari `display` numpad; seluruh pemakaian hero memakai kelas langsung `text-[44px] leading-[48px]` (tidak ada kelas `.display-lg` khusus).
 
-### Ringkasan Masuk/Keluar (dashboard)
-Dua kartu `surface` berdampingan. Masing-masing berisi: label ("Masuk"/"Keluar", `caption` muted), nominal `title-2` (pemasukan `brand`, pengeluaran `ink`), dan **delta persen vs bulan sebelumnya** (`micro`/`caption` kecil) tepat di bawahnya. Delta selalu menyertakan tanda `+`/`-` (mis. `+12%`, `-8%`). Warna delta mengikuti arah yang menguntungkan: naiknya Pemasukan atau turunnya Pengeluaran = `brand`; sebaliknya = `destructive`. Bila bulan sebelumnya tidak punya basis (0), delta tidak ditampilkan. **Kartu adalah tautan** ke daftar transaksi terfilter: Masuk → `/transactions?type=income`, Keluar → `/transactions?type=expense`. Tautan mencakup seluruh kartu (target ≥ 44 px), hover `muted` 40%, fokus keyboard terlihat; kartu tidak memuat elemen interaktif lain.
+### Strip Cash flow (dashboard)
+Satu strip penuh lebar menggantikan dua kartu Masuk/Keluar; bukan dua kotak terpisah. Panel `surface` radius hero (`rounded-hero`, 20 px) dengan border `line`, padding 16 px. Isi dari atas ke bawah:
+1. **Baris label:** kiri — "Cash flow bulan ini" (`caption` 13/18, bobot 500, `muted`); kanan — **selisih bersih** bulan ini (`totals.net`) dengan tanda `+`/`−`, `formatCompact` (mis. `+Rp 1,2 jt`), `num`, bobot 600, warna `brand` bila ≥ 0 dan `destructive` bila < 0, dibungkus `MaskedAmount`. Makna angka (pemasukan dikurangi pengeluaran) dijelaskan lewat teks baris kiri; tidak ada chip tambahan.
+2. **Strip:** flex penuh lebar, tinggi 64 px (`h-16`), radius 10 px, `overflow-hidden`, dua segmen berdampingan dengan celah 2 px tipis (warna panel, seperti kartu kredit). Segmen kiri berlatar `primary` (uang masuk), segmen kanan berlatar `destructive` (uang keluar). Lebar tiap segmen proporsional terhadap jumlah: `bagian / (masuk + keluar) × 100 %`, dengan **lebar minimum 34 %** per segmen (agar area sentuh memadai); total 0 → 50/50. Teks di atas setiap segmen memakai `on-brand` (terang putih di atas `destructive #C8372D` ≈ 5,0:1; gelap `#06130D` di atas `destructive #F0716A` ≈ 6,4:1).
+   - Tiap segmen berisi dua baris: baris 1 — label ("Masuk"/"Keluar", `micro` 12/16 bobot 500, `on-brand` penuh) di kiri dan **persen** bagian terhadap total (`num`) di kanan baris yang sama; baris 2 — nominal (`caption` 13/18 bobot 600, `num`, `truncate`).
+   - **Masing-masing segmen adalah tautan** ke daftar transaksi terfilter: kiri → `/transactions?type=income`, kanan → `/transactions?type=expense`. Fokus keyboard terlihat (cincin 2 px `on-brand` inset, `z-index` teratas); `aria-label` menyebut arah saja (tanpa nominal, agar tidak membocorkan angka saat mode "Sembunyikan saldo"), mis. "Masuk — lihat transaksi pemasukan". Tidak ada kontrol lain di dalam strip.
+   - Nilai besar tidak boleh meluber: `text-[13px]` + `tabular-nums` + `truncate`; pada layar sempit nominal boleh terpotong dengan ellipsis.
+3. Segmen terisi dari 0 ke lebar akhir saat pertama tampil (`bar-fill`, strip memakai `--motion-bar` 420 ms `ease-out`, pola yang sama dengan bar anggaran); perubahan berikutnya (pindah bulan) memakai transisi `width` 420 ms (`--motion-bar`). Dimatikan pada `prefers-reduced-motion`.
+Selisih vs bulan lalu tidak lagi ditampilkan di sini (persen vs bulan lalu digantikan persen bagian terhadap total); perbandingan vs bulan lalu tetap tersedia sebagai chip selisih di panel saldo. Baris nominal strip ikut mode sembunyikan saldo ("Sembunyikan saldo").
 
 ### Pengeluaran bulan ini (donut mini, dashboard)
-Panel ringkas tepat setelah kartu Masuk/Keluar, sebelum Anggaran; **hanya tampil bila ada pengeluaran bulan ini** (total keluar > 0), jika nol panel disembunyikan. Isi: `SectionHeader` "Pengeluaran bulan ini" + panel `surface` berisi `CategoryDonut` varian `compact` (prop `compact?: boolean` di `components/charts/category-charts.tsx`): donut 96 px (`h-24 w-24`) dengan total di tengah dihilangkan, legend **5 kategori teratas** berupa titik warna + label + **persentase saja** (tanpa nominal). Warna irisan memakai `CHART_COLORS` (atau warna kategori bila ada). Ringkasan `sr-only` menyebut nominal per kategori untuk pembaca layar. Data dihitung dari `spendingByCategory(monthTransactions)` (sama dengan sumber Laporan), diurutkan menurun. Panel tidak memuat tautan atau kontrol lain; nominal tidak disamarkan oleh mode privasi (ikut aturan "grafik tidak disamarkan").
+Panel ringkas tepat setelah strip Cash flow, sebelum Anggaran; **hanya tampil bila ada pengeluaran bulan ini** (total keluar > 0), jika nol panel disembunyikan. Isi: `SectionHeader` "Pengeluaran bulan ini" + panel `surface` berisi `CategoryDonut` varian `compact` (prop `compact?: boolean` di `components/charts/category-charts.tsx`): donut 96 px (`h-24 w-24`) dengan total di tengah dihilangkan, legend **5 kategori teratas** berupa titik warna + label + **persentase saja** (tanpa nominal). Warna irisan memakai `CHART_COLORS` (atau warna kategori bila ada). Ringkasan `sr-only` menyebut nominal per kategori untuk pembaca layar. Data dihitung dari `spendingByCategory(monthTransactions)` (sama dengan sumber Laporan), diurutkan menurun. Panel tidak memuat tautan atau kontrol lain; nominal tidak disamarkan oleh mode privasi (ikut aturan "grafik tidak disamarkan").
 
 ### Header dashboard
-Di samping sapaan "Halo, \<nama\>" tampil **avatar inisial**: lingkaran `brand-soft` berisi inisial pertama nama (`label`/`body-strong`, warna `brand`), ukuran 36-40 px, `aria-hidden` (nama sudah terbaca dari teks sapaan). **Di bawah sapaan** tampil tanggal hari ini dalam Bahasa Indonesia (`caption` 12 px, `muted`), format `Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })` — mis. "Jumat, 14 November" — diikuti pemilih bulan pada baris berikutnya.
+Susunan dari atas ke bawah di kolom sapaan: **wordmark "Keuangan"** (`caption` 13/18, bobot 600, warna `brand`/`primary`, sentence case) di atas **"Halo, \<nama\>"** (`title-2` 18/24, bobot 600, `ink`, tanpa tracking) di atas tanggal hari ini dalam Bahasa Indonesia (`caption` 13/18, bobot 500, `muted`), format `Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' })` — mis. "Jumat, 14 November". Di samping kiri kolom teks tampil **avatar inisial** 36–40 px: lingkaran `brand-soft` berisi inisial pertama nama (`label`/`body-strong`, warna `brand`), `aria-hidden` (nama sudah terbaca dari teks sapaan). Pemilih bulan tampil di baris berikutnya di bawah tanggal. Header ini tidak memakai animasi stroke-draw (itu khusus mark hero masuk/daftar saja).
 
 ### Sembunyikan saldo (privasi)
 Mode privasi untuk dashboard; berguna saat layar terlihat orang lain. Preferensi disimpan **hanya di client** pada localStorage key `keuangan-hide-balance` (default tampil; `1` = disembunyikan); tidak disimpan di server, database, atau profil. Dua titik kendali yang sinkron (lewat event `storage` dan event khusus `keuangan-hide-balance-change`):
 1. Tombol ikon **mata / mata-off** (`Eye`/`EyeOff`) di header dashboard, target sentuh 44 px, `aria-pressed` dan `aria-label` yang menyebut state ("Sembunyikan saldo" / "Tampilkan saldo").
 2. Sakelar "Tampilkan saldo" di Pengaturan ▸ Preferensi (on = saldo tampil, default).
 
-Saat tersembunyi, nominal di dashboard dirender `Rp •••••`: saldo total (hero), nominal Masuk dan Keluar, dan baris nominal pada anggaran (spent/limit). Teks disamarkan, bukan dihapus dari tata letak (tidak ada layout shift), dan diberi `role="img"` + `aria-label="Nominal disembunyikan"`. Daftar transaksi terbaru, chip selisih, dan grafik tidak disamarkan. Tidak ada animasi baru; pergantian langsung.
+Saat tersembunyi, nominal di dashboard dan `/goals` dirender `Rp •••••`: saldo total (hero), nominal Masuk dan Keluar pada strip Cash flow, baris nominal pada anggaran (spent/limit), serta nominal target, terkumpul, dan sisa pada Target tabungan (kartu `/goals` dan kartu mini dashboard). Teks disamarkan, bukan dihapus dari tata letak (tidak ada layout shift), dan diberi `role="img"` + `aria-label="Nominal disembunyikan"`. Daftar transaksi terbaru, chip selisih, dan grafik tidak disamarkan. Tidak ada animasi baru; pergantian langsung.
 
 ### Keadaan kosong (Empty state)
-Komponen terpusat `components/ui/empty-state.tsx`. Struktur: panel `surface` radius 14, border `line`; ikon besar (32 px) di dalam lingkaran `brand-soft` (64 px), warna ikon `brand`; kalimat `body` `muted-foreground` (maks ±32 ch, di tengah); CTA `Button` variant `primary` (size `auto`) atau tautan bergaya tombol utama. Dipakai di empat layar: belum ada transaksi, belum ada dompet, belum ada anggaran, belum ada laporan. Salinan mengikuti kosakata baku §8.
+Komponen terpusat `components/ui/empty-state.tsx`. Struktur: panel `surface` radius 14, border `line`; ikon besar (32 px) di dalam lingkaran `brand-soft` (64 px), warna ikon `brand`; kalimat `body` `muted-foreground` (maks ±32 ch, di tengah); CTA `Button` variant `primary` (size `auto`) atau tautan bergaya tombol utama. Dipakai di lima layar: belum ada transaksi, belum ada dompet, belum ada anggaran, belum ada laporan, belum ada target tabungan. Salinan mengikuti kosakata baku §8.
 
 ### Layar masuk dan daftar
 Mobile-first 360–430 px, kedua tema. Susunan dari atas: mark besar (72 px) → wordmark "Keuangan" (`title-1` 24/30, Inter Tight 700, tracking −0.02em) → tagline "Catat uangmu dalam hitungan detik" (`body-sm`, muted), semuanya rata tengah. Di bawahnya, formulir dibungkus panel rapi (`surface`, border `line`, radius 14, padding 20–24 px) — bukan maket kosong tanpa bingkai. Aksi kirim memakai tombol utama lebar penuh di dalam panel; tautan ganti mode (Masuk ↔ Daftar) di bawah panel. Fokus keyboard tetap terlihat; target sentuh ≥ 44 px.
@@ -286,8 +301,15 @@ Angka sangat besar (`display`), awalan "Rp" lebih kecil dan `muted`. Pemisah rib
 ### Date picker (bottom sheet kalender)
 Pengganti `<input type="date">` pada form transaksi dan draf scan; komponen `components/ui/date-picker-sheet.tsx` membungkus `Sheet` yang sudah ada. Isi dari atas ke bawah: baris navigasi — tombol ikon ‹ (`aria-label` "Bulan sebelumnya"), label bulan Indonesia lengkap + tahun (format id-ID, mis. "November 2026"), tombol ikon › (`aria-label` "Bulan berikutnya", dinonaktifkan saat menampilkan bulan berjalan — tanggal masa depan tidak dipilih); grid kalender Senin–Minggu dengan nama hari "Sen Sel Rab Kam Jum Sab Min"; tombol teks "Hari ini" (`aria-label` "Hari ini") yang melompat ke hari ini. Hari terpilih ditandai latar `brand` dengan teks `on-brand` bobot 600 dan `aria-pressed="true"`; hari ini yang belum terpilih diberi cincin border `brand`; hari di atas `max` (bawaan hari ini) nonaktif: opasitas 40%, tidak dapat difokuskan. Struktur ARIA `grid`/`row`/`gridcell`; tombol hari memakai `aria-label` tanggal lengkap id-ID dan dapat dinavigasi dengan tombol panah (kiri/kanan ±1 hari, atas/bawah ±7 hari). Saat terbuka fokus mendarat di sel tanggal 1; `Esc` menutup picker saja (sheet induk tetap terbuka) dan fokus kembali ke pemicu. Pemicu berupa tombol bergaya field (label "Tanggal" terlihat di atas, bukan placeholder): tinggi 48 px, radius 10 px, border `input`, latar `surface`, ikon kalender `muted`, teks `formatDateKey` id-ID ("12 Nov 2026"), target sentuh ≥ 44 px, `aria-haspopup="dialog"`. Animasi: konten grid memakai `.animate-fade-up-fast` hanya saat terbuka dan mati total pada `prefers-reduced-motion` (konsisten dengan pola repo).
 
+### Ikon kategori (solid)
+Kategori tampil sebagai **lingkaran solid berwarna kategori** dengan ikon Lucide **putih/gelap** di tengahnya — terasa seperti ikon aplikasi nyata, bukan Lucide outline di atas latar lembut. Komponen terpusat `components/ui/category-icon.tsx`: `CategoryIcon({ category, size })` — `size` = diameter lingkaran dalam px (default 40); ikon di dalamnya berukuran ±50% dari `size`, dirender `<Icon fill="currentColor" strokeWidth={1.5} aria-hidden />` (filled solid). Lingkaran: `rounded-full`, latar `category.color` penuh, tanpa border. Nama ikon diambil dari `category.icon` (string) lewat peta statis (`Utensils`, `Bus`, `ShoppingBag`, `ReceiptText`, `HeartPulse`, `Gamepad2`, `GraduationCap`, `Briefcase`, `Shapes`); nama tak dikenal / kategori tanpa ikon memakai fallback `Shapes`.
+
+Warna ikon di atas lingkaran dipilih per kategori dengan helper `contrastOn(color): "#FFFFFF" | "#262012"` di `lib/utils.ts` (luminance relatif WCAG dari hex 3/6/8 digit; ambang **lum > 0,6 → teks gelap `#262012`**, selain itu putih). Kedelapan warna palet §2.3 berada di bawah ambang (selalu putih); ambang ini melindungi warna terang pilihan pengguna (mis. pastel kuning). Bila warna bukan hex valid, fallback putih. Ikon selalu `aria-hidden` — nama kategori terbaca dari teks di sebelahnya. Jangan menulis hex warna ikon langsung di komponen; selalu lewat `contrastOn`.
+
+Dipakai di: baris transaksi (`transaction-list.tsx`, `size-10`) dan chip kategori pada form tambah/ubah transaksi (`transaction-sheet.tsx`, lingkaran 20 px menggantikan titik warna). Baris transfer (tanpa kategori) memakai lingkaran netral `muted` 15% berisi ikon `ArrowLeftRight` warna `muted-foreground` — transfer tidak diberi warna kategori. Ikon dompet (`wallet-manager.tsx`) **tidak** berubah; ikon grafik & donat tetap memakai titik warna / irisan warna seperti sebelumnya.
+
 ### Baris transaksi
-Ikon kategori bulat `size-10` (40 px; latar `brand-soft` atau warna kategori 15%), nama dan catatan di kiri (`body`, `caption`), nominal di kanan (`body-strong`). Pemasukan `brand` dengan "+", pengeluaran `destructive` dengan "-" - daftar transaksi boleh memakai merah untuk pengeluaran karena tandanya eksplisit; transfer tetap `muted-foreground` dengan "↔".
+Ikon kategori solid `size-10` (40 px; lihat "Ikon kategori (solid)"), nama dan catatan di kiri (`body`, `caption`), nominal di kanan (`body-strong`). Pemasukan `brand` dengan "+", pengeluaran `destructive` dengan "-" - daftar transaksi boleh memakai merah untuk pengeluaran karena tandanya eksplisit; transfer tetap `muted-foreground` dengan "↔".
 
 **Geser untuk aksi (swipe):** baris mendukung geser horizontal dengan pointer events (`onPointerDown/Move/Up` + `setPointerCapture`, `touch-action: pan-y` agar gulir vertikal tidak terganggu). Threshold **72 px**:
 - Geser ke **kiri** → aksi **Hapus**: ikon `Trash2` + teks warna `danger`/`destructive`, latar aksi `expense-soft` saat melewati threshold (di bawah threshold latar `muted`).
@@ -302,8 +324,34 @@ Ikon kategori bulat `size-10` (40 px; latar `brand-soft` atau warna kategori 15%
 ### Bar anggaran
 Tinggi 8, radius penuh, latar `line`. Isi: `brand` di bawah 80%, `warn` mulai 80%, `expense` mulai 100%. Selalu disertai persentase dan sisa nominal sebagai teks; saat 80% dan 100% tampilkan ikon peringatan. Isi bar terisi dari 0 ke persentase saat pertama tampil (420 ms `ease-out`); perubahan berikutnya memakai transisi lebar 200 ms.
 
+### Target tabungan
+Halaman `/goals` (entri lewat Pengaturan ▸ Manajemen → "Target tabungan", ikon `PiggyBank`; slot navigasi bawah tidak bertambah) dan kartu mini di dashboard. Kosakata: **Target tabungan**, **Setor**, **Tarik**, **Tercapai**.
+
+**Halaman /goals** — satu kolom, `SectionHeader`-less header halaman: judul "Target tabungan" (`title-1` 24/30, 700, tracking −0.02em) + subjudul 13 px `muted` "Kumpulkan dana untuk tujuanmu, satu setoran tiap kali." Tombol utama lebar penuh "Tambah target" (ikon `Plus`) membuka sheet; di bawahnya daftar **kartu penuh lebar** (`Panel` radius 14, padding 16):
+- Baris isi: **ikon goal** 48 px lingkaran solid warna goal (`goal.color`, ikon Lucide di dalamnya memakai `contrastOn`, pola sama dengan ikon kategori), lalu kolom tengah — nama (`body-strong` 16/600, `truncate`) di atas "Terkumpul **Rp X** dari **Rp Y**" (`caption`, nominal `.num`, disembunyikan mode privasi), tombol menu `MoreHorizontal` 44 px di kanan (menu kecil: hanya "Hapus", ikon `Trash2`, teks `expense`, membuka `ConfirmDialog`; "Ubah" tidak tersedia).
+- Di bawahnya **persen besar** (`display`-kecil: 28 px/32, bobot 700, `.num`, tracking −0.02em); bila target tercapai 100% tampil **chip "Tercapai"** di kanan (latar `gold-soft`, teks `gold-text`, ikon `Check` 14 px).
+- **Progress bar** tinggi 8, radius penuh, latar `line`: isi `brand` (`primary`) selama belum tercapai, **`gold`** saat tercapai. `warn` tidak dipakai di sini (khusus anggaran). Bar terisi dengan animasi `bar-fill` 420 ms `ease-out`.
+- Baris bawah: kiri — "Sisa **Rp X**" (`caption`, nominal `.num`, disembunyikan mode privasi; bila tercapai: teks `gold-text` "Target tercapai. Mantap!"); kanan — tombol **"Setor"** (`variant="secondary"`, size `sm`).
+- Bila ada target tercapai, tampil ringkasan `caption` `muted` di atas daftar: "N dari M target tercapai."
+- **Keadaan kosong:** `EmptyState` ikon `PiggyBank`, salinan "Buat target tabungan pertamamu. Sisihkan dana sedikit demi sedikit sampai tercapai.", CTA "Buat target tabungan" (membuka sheet yang sama).
+
+**Sheet "Tambah target"** (komponen `Sheet`): isian — **Nama target** (`Input`, maks 60 karakter), **Target (Rp)** (input numerik dengan pemisah ribuan, dibatasi `MAX_AMOUNT`), **Ikon** (`Select`: Target / PiggyBank / TrendingUp / Home / GraduationCap, nilai tersimpan = nama ikon), warna bawaan `#0B7A4B` (tidak ada pemilih warna di UI). CTA lebar penuh "Simpan target"; galat tampil `role="alert"` di dalam sheet; setelah simpan, toast "Target tabungan dibuat" + `router.refresh()`.
+
+**Sheet "Setor"** (per kartu): nominal (`Input` numerik + **chip cepat "+1 jt" / "+500 rb"** yang menambahkan ke nominal berjalan, tinggi 44, border `line`), baris dua kolom — **Tanggal** (tombol bergaya field, bawaan hari ini, `DatePickerSheet`, maks hari ini) dan **Catatan** (`Input`, maks 200, opsional). Di bawah form tersedia **toggle kecil "Tarik dana dari target"** (ikon `Minus`, tinggi 44) yang mengubah sheet menjadi mode penarikan (judul "Tarik dari …", CTA "Tarik dana", amount tersimpan negatif, chip cepat disembunyikan); menekan lagi kembali ke mode setor. CTA "Simpan setoran". Toast "Setoran tercatat" / "Penarikan tercatat".
+
+**Kartu mini dashboard** (antara strip Cash flow dan Anggaran; **hanya tampil bila ada ≥ 1 goal**): `SectionHeader` "Target tabungan" + tautan "Lihat" → `/goals`; panel berisi ikon goal 40 px, nama (15/600, `truncate`), bar `primary` (**`gold` hanya bila goal yang ditampilkan tercapai 100%**, persis aturan bar di `/goals`; kartu mini dengan progres tertinggi `< 100%` karena itu selalu `primary`), dan teks "Sisa **Rp X** dari target **Rp Y** · **Z%**" (nominal `.num`, disembunyikan mode privasi; bila tercapai, "Sisa …" diganti teks `gold-text` "**Tercapai**" — bukan "Sisa Rp 0 · 137%"). Goal yang ditampilkan: progres tertinggi yang **< 100%**; bila semua tercapai, tampilkan goal terakhir dibuat. Tanpa goal, panel tidak dirender (dashboard tidak boleh ramai). Persen ditampilkan apa adanya (boleh > 100, boleh negatif); lebar bar tetap dikunci 0–100.
+
+**Confetti ("serbuk emas")** — lihat §9. Hanya dipicu dari form Setor saat sebuah setoran positif memindahkan goal dari belum tercapai → tercapai 100%, sekali per goal per sesi; tidak pernah pada render awal.
+
+**Mode privasi ("Sembunyikan saldo"):** nominal target, terkumpul, sisa, dan baris kartu mini dashboard disembunyikan (`Rp •••••`), pola yang sama dengan anggaran; persen tidak disamarkan.
+
+**Warna `gold`:** dipakai eksklusif untuk milestone "Tercapai" target tabungan (bar tercapai, chip, teks pencapaian, serbuk confetti). Jangan menggantikan `warn` anggaran.
+
 ### Chip dompet
 Radius 10, ikon + nama + saldo kecil. Terpilih: latar `brand-soft`, border `brand`.
+
+### Chip kategori (form transaksi)
+Pada form tambah/ubah transaksi, chip kategori satu baris (`h-11`, radius `btn`, border `line`) menampilkan lingkaran kategori solid 20 px (lihat "Ikon kategori (solid)") menggantikan titik warna 10 px, diikuti nama kategori. Chip terpilih: border `primary` + latar `secondary` + teks `secondary-foreground` (tidak berubah). Target sentuh tetap ≥ 44 px dengan `gap-2`.
 
 ### Navigasi bawah
 Lima slot: Beranda, Transaksi, Tambah (tombol bulat `brand`, ukuran 56, menonjol di tengah), Anggaran, Lainnya. Ikon 24 px dengan label `micro`. Slot aktif = **lingkaran `brand` penuh** berisi ikon `on-brand` (putih terang / `#06130D` gelap) dengan label berwarna `brand`; slot non-aktif tetap `muted-foreground`. Latar lingkaran dan warna label bertransisi 180 ms (`--motion-base`) tanpa menggeser tata letak; bobot ikon berganti langsung (`strokeWidth` tidak dapat dianimasikan CSS). `aria-current="page"` tetap dipakai pada slot aktif. Transisi dimatikan saat `prefers-reduced-motion`.
@@ -312,7 +360,7 @@ Lima slot: Beranda, Transaksi, Tambah (tombol bulat `brand`, ukuran 56, menonjol
 Satu halaman `/settings`, dikelompokkan dengan `SectionHeader` per grup — **tidak ada route baru**. Urutan dari atas:
 - **Profil** — Panel berisi avatar inisial besar (64 px, `brand-soft`, inisial `brand`, warna teks `brand`, bobot 700), nama tampilan (`body-strong`), dan email (`caption`, `muted`, tidak dapat diubah). Di bawahnya dalam panel yang sama: isian nama tampilan, mata uang (statis IDR), awal bulan anggaran, dan tombol "Simpan pengaturan".
 - **Preferensi** — Panel berisi: segmen tema (Ikuti sistem / Terang / Gelap, langsung berlaku); sakelar "Tampilkan saldo" (lihat "Sembunyikan saldo"; default on); baris Bahasa ("Indonesia", statis — satu-satunya bahasa saat ini, dengan keterangan kecil).
-- **Manajemen** — Panel-list (baris dipisah garis `line`, tinggi 56 px, ikon `muted` + chevron): Dompet → `/wallets`, Kategori → jangkar `#kategori` pada halaman ini, Anggaran → `/budgets`.
+- **Manajemen** — Panel-list (baris dipisah garis `line`, tinggi 56 px, ikon `muted` + chevron): Dompet → `/wallets`, Kategori → jangkar `#kategori` pada halaman ini, Anggaran → `/budgets`, Target tabungan → `/goals` (ikon `PiggyBank`).
 - **Kategori** — manajer kategori apa adanya (diberi `id="kategori"` agar jangkar Manajemen mendarat tepat).
 - **Tentang** — Panel berisi mark "K" kecil (32 px), "Keuangan", dan teks `caption` `muted`: "Keuangan v0.1 · PWA pencatatan keuangan pribadi".
 - **Zona berbahaya** — tetap paling bawah dengan header sendiri, seperti sebelumnya.
@@ -377,13 +425,16 @@ Pesan galat menjelaskan apa yang terjadi dan cara memperbaikinya; tidak meminta 
 ## 9. Gerak dan Aksesibilitas
 
 **Gerak:**
-Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `--motion-base` 180 ms, `--motion-slow` 240 ms, `--motion-sheet` 260 ms, `--motion-bar` 420 ms, `--motion-count` 700 ms; easing `--ease-out`, `--ease-in-out`; jeda bertahap `--stagger-step` 30 ms.
+Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `--motion-base` 180 ms, `--motion-slow` 240 ms, `--motion-sheet` 260 ms, `--motion-bar` 420 ms, `--motion-count` 700 ms, `--motion-logo` 600 ms; easing `--ease-out`, `--ease-in-out`; jeda bertahap `--stagger-step` 30 ms.
 
 - **Respons tindakan pengguna:** tombol (150 ms), sheet buka/tutup, toast masuk, dialog konfirmasi, segmented control, chip kategori, dan perubahan nominal (120 ms).
-- **Otomatis, hanya saat konten pertama tampil:** Saldo total menghitung naik sekali saat pertama tampil; perubahan nilai berikutnya (pindah bulan, refresh setelah simpan) berpindah dengan transisi 700 ms dari nilai sebelumnya, bukan dari 0. Baris transaksi `fade-up` berurutan (maksimal 8 baris), isi bar anggaran terisi dari 0, konten halaman (dashboard, transaksi, laporan) muncul `fade-up` 180 ms saat menggantikan kerangka memuat, dan garis tren saldo tergambar sekali. Tidak ada animasi masuk pada bagian halaman lain.
+- **Otomatis, hanya saat konten pertama tampil:** Saldo total menghitung naik sekali saat pertama tampil; perubahan nilai berikutnya (pindah bulan, refresh setelah simpan) berpindah dengan transisi 700 ms dari nilai sebelumnya, bukan dari 0. Baris transaksi `fade-up` berurutan (maksimal 8 baris), isi bar anggaran terisi dari 0, konten halaman (dashboard, transaksi, laporan) muncul `fade-up` 180 ms saat menggantikan kerangka memuat, dan garis tren saldo tergambar sekali.
+- **Stroke-draw logo (`animate` pada `Logo`):** mark "K" menggambar ulang sekali saat mount pertama — `stroke-dasharray`/`stroke-dashoffset` dari penuh (1) ke 0 selama **600 ms** `--ease-out` (`--motion-logo`), kedua `<path>` bersamaan, implementasi murni CSS (tanpa JS). Hanya untuk mark hero di layar masuk/daftar saja (72 px) — bukan pada nav, header, atau render berulang; tanpa prop `animate`, tidak ada animasi. Total mati pada `prefers-reduced-motion` (durasi efektif 0 ms via aturan global, mark langsung tampil jadi).
+- **Confetti serbuk emas (`Confetti` pada `/goals`):** hanya dipicu oleh form Setor/Tarik saat sebuah setoran **positif** memindahkan target tabungan dari belum tercapai → tercapai 100%, sekali per goal per sesi klien. 18 kotak kecil emas (6–10 px, nuansa `--gold`) jatuh dari atas layar dengan rotasi dan jeda acak, durasi ≈ **1,4 detik**, `pointer-events: none`, tanpa suara. Tidak pernah tampil pada render awal atau saat navigasi. Mati total pada `prefers-reduced-motion` (komponen tidak merender apa pun).
+- Tidak ada animasi masuk pada bagian halaman lain.
 - **Saat menunggu data:** kilau `.skeleton`. Ini satu-satunya animasi yang berulang.
 - Tidak ada animasi saat berpindah halaman atau menggulir.
-- Hormati `prefers-reduced-motion`: durasi dipangkas, kilau kerangka dimatikan, hitungan saldo langsung menampilkan nilai akhir, dan transformasi tekan dinonaktifkan.
+- Hormati `prefers-reduced-motion`: durasi dipangkas, kilau kerangka dimatikan, hitungan saldo langsung menampilkan nilai akhir, stroke-draw logo langsung menampilkan mark utuh, confetti serbuk emas tidak dirender, dan transformasi tekan dinonaktifkan.
 
 **Aksesibilitas:**
 - Kontras minimal WCAG AA pada kedua tema.
@@ -425,6 +476,10 @@ Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `-
   --warn: #B7791F;
   --warn-text: #8F5A0A;
   --warn-soft: #FBF0D9;
+  /* Gold HANYA untuk milestone "tercapai" target tabungan (§6) */
+  --gold: #D4AF37;
+  --gold-soft: #FBF6E3;
+  --gold-text: #8A6A10;
   --expense-soft: #FBE7E5;
   --expense-text: #B33226;
   --surface-raised: #FFFFFF;
@@ -437,6 +492,7 @@ Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `-
   --motion-sheet: 260ms;
   --motion-bar: 420ms;
   --motion-count: 700ms;
+  --motion-logo: 600ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
   --stagger-step: 30ms;
@@ -464,6 +520,10 @@ Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `-
   --warn: #E0A93B;
   --warn-text: #F0C66B;
   --warn-soft: #33280F;
+  /* Gold HANYA untuk milestone "tercapai" target tabungan (§6) */
+  --gold: #F0C85E;
+  --gold-soft: #33290F;
+  --gold-text: #F5DC8A;
   --expense-soft: #3A1B19;
   --expense-text: #F0716A;
   --surface-raised: #1B2520;
@@ -475,7 +535,37 @@ Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `-
 }
 ```
 
-**Tailwind:** petakan `warn`, `warn-text`, `warn-soft`, `expense-soft`, `expense-text` ke variabel di atas pada `@theme inline`; jangan memakai warna bawaan Tailwind di komponen.
+**Tailwind:** petakan `warn`, `warn-text`, `warn-soft`, `expense-soft`, `expense-text`, `gold`, `gold-soft`, `gold-text` ke variabel di atas pada `@theme inline`; jangan memakai warna bawaan Tailwind di komponen. `gold` (dan turunannya) hanya untuk milestone "tercapai" target tabungan; `warn` tetap khusus anggaran ≥ 80%.
+
+**Hero saldo — kelas utilitas tambahan di `globals.css`:**
+```css
+/* Latar transparan di atas panel saldo penuh (design.md §6 "Panel saldo") */
+.hero-scrim {
+  background-color: color-mix(in oklab, #0E1A15 16%, transparent); /* terang: gelap transparan, menjaga AA */
+}
+.dark .hero-scrim {
+  background-color: color-mix(in oklab, var(--primary-foreground) 15%, transparent); /* gelap: on-brand 15% */
+}
+
+/* Serbuk emas milestone target tabungan (§6 "Target tabungan", §9). */
+@keyframes confetti-fall {
+  from { opacity: 1; transform: translateY(-12vh) rotate(0deg); }
+  to   { opacity: 0.9; transform: translateY(108vh) rotate(var(--confetti-rotate, 540deg)); }
+}
+.confetti-piece { animation: confetti-fall 1.4s var(--ease-in-out) both; }
+
+/* Stroke-draw logo (design.md §6 "Logo dan identitas", §9) */
+@keyframes stroke-draw {
+  from { stroke-dashoffset: 1; }
+  to   { stroke-dashoffset: 0; }
+}
+.animate-stroke-draw path {
+  stroke-dasharray: 1;   /* pathLength=1 pada <path> */
+  stroke-dashoffset: 1;
+  animation: stroke-draw var(--motion-logo) var(--ease-out) both;
+}
+```
+Tanpa kelas-kelas ini panel hero tidak punya latar transparan chip/avatar dan prop `animate` pada `Logo` tidak berefek. `prefers-reduced-motion` mematikan `stroke-draw` lewat aturan global (durasi efektif 0 ms).
 
 **Skala `display`:** skala `display` (40 / 44, bobot 700) dipakai untuk nominal numpad; `display-lg` (44 / 48) dipakai khusus untuk saldo total di hero dashboard. Keduanya ditulis langsung di kode (mis. `text-[40px] leading-[44px]` dan `text-[44px] leading-[48px]`, bobot 700, tracking −0.02em) — tidak ada kelas `.display`/`.display-lg` khusus.
 
@@ -485,7 +575,7 @@ Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `-
 - `theme_color`: `#0B7A4B` di manifest, dan `<meta name="theme-color">` per mode lewat `viewport` di `app/layout.tsx` (`#0B7A4B` terang, `#0C1210` gelap). Keduanya wajib konsisten dengan brand hijau dan kanvas gelap — jangan memakai warna lain.
 - `background_color` manifest: `#F6F8F7` (tetap; layar splash mengikuti warna ini).
 - Ikon: mark "K" putih tebal (700) di atas rounded-square hijau `#0B7A4B` (radius ±22% untuk versi `any`; maskable dan apple-touch-icon penuh tanpa radius dengan zona aman 80%). Ukuran 192, 512, *maskable* 512, dan apple-touch-icon 180; lihat §6 "Logo dan identitas".
-- Layar splash: mengikuti `background_color` manifest + ikon maskable; iOS memakai `apple-touch-icon` yang sama. `config.appleWebApp.startupImage` **tidak dipakai** — kompleks (butuh gambar per ukuran perangkat) dan redundan; splash iOS cukup menampilkan warna latar dan ikon aplikasi. `appleWebApp.capable` dan `statusBarStyle: "default"` dibiarkan apa adanya.
+- Layar splash: mengikuti `background_color` manifest + ikon maskable; iOS memakai `apple-touch-icon` yang sama. Splash PWA **bersifat otomatis dari OS** (Android/Chrome dari `background_color` + ikon; iOS dari warna latar + apple-touch-icon) — tidak ada komponen splash kustom di kode dan tidak perlu `apple-touch-startup-image` per ukuran perangkat (kompleks dan redundan). `config.appleWebApp.startupImage` **tidak dipakai**; jangan menambahkan startup image, splash screen komponen, atau layar loading buatan. `appleWebApp.capable` dan `statusBarStyle: "default"` dibiarkan apa adanya. `theme_color` `#0B7A4B` (manifest + `viewport`) sudah benar dan dipertahankan. Catatan: layar splash OS tidak dapat dianimasikan dan tidak menampilkan wordmark; identitas animasi (stroke-draw) hanya ada di layar masuk/daftar saja.
 
 ---
 
@@ -512,5 +602,6 @@ Durasi, kurva, dan jeda memakai token pada bagian 10: `--motion-fast` 120 ms, `-
 ## 12. Pertanyaan Terbuka
 
 - Nama dan logo aplikasi: ditetapkan — mark "K" di atas rounded-square `brand` (§6 "Logo dan identitas").
-- Apakah ikon kategori memakai emoji (cepat, tanpa aset) atau set ikon garis seperti Lucide (lebih konsisten)? Rekomendasi awal: Lucide.
+- Ikon kategori emoji atau set ikon garis Lucide? Ditetapkan (v0.3): Lucide **filled solid** di atas lingkaran solid warna kategori — lihat §6 "Ikon kategori (solid)".
 - Mode tampilan "sembunyikan saldo" (privasi): ditetapkan dan diimplementasikan — lihat §6 "Sembunyikan saldo".
+- Target tabungan ("tujuan tabungan"): ditetapkan dan diimplementasikan — lihat §6 "Target tabungan" dan §5.1.

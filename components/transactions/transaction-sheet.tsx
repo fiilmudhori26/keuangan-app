@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import { Camera, Check, Delete, Calendar } from "lucide-react";
 import { Sheet } from "@/components/ui/sheet";
 import { DatePickerSheet } from "@/components/ui/date-picker-sheet";
@@ -297,11 +298,7 @@ export function TransactionSheet({
                         : "border-border text-foreground",
                     )}
                   >
-                    <span
-                      aria-hidden
-                      className="size-2.5 rounded-full"
-                      style={{ backgroundColor: category.color }}
-                    />
+                    <CategoryIcon category={category} size={20} />
                     {category.name}
                   </button>
                 ))}

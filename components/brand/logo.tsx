@@ -3,11 +3,14 @@ import { cn } from "@/lib/utils";
 export function Logo({
   size = 40,
   showWordmark = true,
+  animate = false,
   className,
 }: {
   /** Ukuran sisi mark dalam px. Wordmark ikut diskalakan (±0,42× size). */
   size?: number;
   showWordmark?: boolean;
+  /** Gambar ulang mark sekali saat mount (stroke-draw 600 ms). Mati saat reduced-motion. */
+  animate?: boolean;
   className?: string;
 }) {
   const mark = (
@@ -27,9 +30,10 @@ export function Logo({
         strokeWidth={56}
         strokeLinecap="round"
         strokeLinejoin="round"
+        className={animate ? "animate-stroke-draw" : undefined}
       >
-        <path d="M182 150 V362" />
-        <path d="M352 150 L218 256 L352 362" />
+        <path d="M182 150 V362" pathLength={1} />
+        <path d="M352 150 L218 256 L352 362" pathLength={1} />
       </g>
     </svg>
   );

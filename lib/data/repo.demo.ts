@@ -2,7 +2,7 @@ import { uid } from "../utils";
 import { getStore } from "../demo/store";
 import { isDemoMode } from "../db";
 import { drizzleRepo } from "./repo.drizzle";
-import type { Budget, Category, Profile, Transaction, Wallet } from "../types";
+import type { Budget, Category, GoalContribution, Profile, SavingsGoal, Transaction, Wallet } from "../types";
 import type { Repo } from "./types";
 
 const demoRepo: Repo = {
@@ -34,6 +34,8 @@ const demoRepo: Repo = {
     store.categories = store.categories.filter((c) => c.userId !== userId);
     store.transactions = store.transactions.filter((t) => t.userId !== userId);
     store.budgets = store.budgets.filter((b) => b.userId !== userId);
+    store.savingsGoals = store.savingsGoals.filter((g) => g.userId !== userId);
+    store.goalContributions = store.goalContributions.filter((c) => c.userId !== userId);
     store.profiles = store.profiles.filter((p) => p.userId !== userId);
   },
 
@@ -212,6 +214,60 @@ const demoRepo: Repo = {
     const before = store.budgets.length;
     store.budgets = store.budgets.filter((b) => !(b.userId === userId && b.id === id));
     return store.budgets.length < before;
+  },
+
+  async listGoals(userId) {
+    return getStore()
+      .savingsGoals.filter((g) => g.userId === userId)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  },
+
+  async listContributions(userId) {
+    return getStore()
+      .goalContributions.filter((c) => c.userId === userId)
+      .sort((a, b) => {
+        const byDate = b.occurredAt.localeCompare(a.occurredAt);
+        return byDate !== 0 ? byDate : b.createdAt.localeCompare(a.createdAt);
+      });
+  },
+
+  async createGoal(userId, input) {
+    const goal: SavingsGoal = {
+      ...input,
+      id: uid("goal"),
+      userId,
+      createdAt: new Date().toISOString(),
+    };
+    getStore().savingsGoals.push(goal);
+    return goal;
+  },
+
+  async deleteGoal(userId, id) {
+    const store = getStore();
+    const exists = store.savingsGoals.some((g) => g.userId === userId && g.id === id);
+    if (!exists) return false;
+    store.savingsGoals = store.savingsGoals.filter((g) => !(g.userId === userId && g.id === id));
+    store.goalContributions = store.goalContributions.filter(
+      (c) => !(c.userId === userId && c.goalId === id),
+    );
+    return true;
+  },
+
+  async addContribution(userId, input) {
+    const store = getStore();
+    const goal = store.savingsGoals.find((g) => g.userId === userId && g.id === input.goalId);
+    if (!goal) return null;
+    const contribution: GoalContribution = {
+      id: uid("contrib"),
+      userId,
+      goalId: goal.id,
+      amount: input.amount,
+      occurredAt: input.occurredAt,
+      note: input.note ?? null,
+      createdAt: new Date().toISOString(),
+    };
+    store.goalContributions.push(contribution);
+    return contribution;
   },
 };
 

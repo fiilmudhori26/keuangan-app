@@ -1,4 +1,12 @@
-import { DEFAULT_CATEGORIES, type Category, type Profile, type Transaction, type Wallet } from "../types";
+import {
+  DEFAULT_CATEGORIES,
+  type Category,
+  type GoalContribution,
+  type Profile,
+  type SavingsGoal,
+  type Transaction,
+  type Wallet,
+} from "../types";
 import { monthKey, shiftMonth, todayKey, toDateKey } from "../date";
 
 export type DemoUser = { id: string; name: string; email: string };
@@ -10,6 +18,8 @@ type Store = {
   categories: Category[];
   transactions: Transaction[];
   budgets: Array<{ id: string; userId: string; categoryId: string; month: string; limitAmount: number }>;
+  savingsGoals: SavingsGoal[];
+  goalContributions: GoalContribution[];
 };
 
 const DEMO_USER_ID = "demo-user";
@@ -174,6 +184,48 @@ function seed(): Store {
     },
   ];
 
+  const savingsGoals: SavingsGoal[] = [
+    {
+      id: "seed",
+      userId,
+      name: "Dana darurat",
+      targetAmount: 10_000_000,
+      icon: "PiggyBank",
+      color: "#0B7A4B",
+      createdAt: now,
+    },
+  ];
+
+  const goalContributions: GoalContribution[] = [
+    {
+      id: "seed_contribution_1",
+      userId,
+      goalId: "seed",
+      amount: 2_500_000,
+      occurredAt: "2026-09-15",
+      note: null,
+      createdAt: now,
+    },
+    {
+      id: "seed_contribution_2",
+      userId,
+      goalId: "seed",
+      amount: 1_000_000,
+      occurredAt: "2026-10-20",
+      note: null,
+      createdAt: now,
+    },
+    {
+      id: "seed_contribution_3",
+      userId,
+      goalId: "seed",
+      amount: 700_000,
+      occurredAt: "2026-11-10",
+      note: null,
+      createdAt: now,
+    },
+  ];
+
   return {
     users: [DEMO_USER],
     profiles: [
@@ -189,6 +241,8 @@ function seed(): Store {
     categories,
     transactions,
     budgets,
+    savingsGoals,
+    goalContributions,
   };
 }
 

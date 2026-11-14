@@ -68,6 +68,29 @@ export type AppUser = {
   image?: string | null;
 };
 
+export type SavingsGoal = {
+  id: string;
+  userId: string;
+  name: string;
+  targetAmount: number; // integer rupiah
+  icon: string;
+  color: string;
+  createdAt: string;
+};
+
+export type GoalContribution = {
+  id: string;
+  userId: string;
+  goalId: string;
+  amount: number; // signed integer rupiah; negatif untuk penarikan
+  occurredAt: string; // YYYY-MM-DD
+  note: string | null;
+  createdAt: string;
+};
+
+/** Daftar ikon yang ditawarkan UI untuk target tabungan (nama ikon Lucide). */
+export const GOAL_ICONS = ["Target", "PiggyBank", "TrendingUp", "Home", "GraduationCap"] as const;
+
 export const WALLET_TYPE_LABELS: Record<WalletType, string> = {
   cash: "Tunai",
   bank: "Bank",

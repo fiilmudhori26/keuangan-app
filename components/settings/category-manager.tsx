@@ -8,6 +8,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { Field, Input, Select } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/components/ui/toast";
+import { CategoryIcon } from "@/components/ui/category-icon";
 import {
   archiveCategoryAction,
   createCategoryAction,
@@ -73,11 +74,7 @@ export function CategoryManager({ categories }: { categories: Category[] }) {
       <ul className="divide-y divide-border border-y border-border">
         {categories.map((category) => (
           <li key={category.id} className="flex min-h-[52px] items-center gap-3 py-1.5">
-            <span
-              aria-hidden
-              className="size-3 rounded-full"
-              style={{ backgroundColor: category.color }}
-            />
+            <CategoryIcon category={category} size={32} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[16px] text-foreground">{category.name}</p>
               <p className="text-[12px] text-muted-foreground">
